@@ -11,6 +11,7 @@
 - 状态管理：Pinia
 - 路由：vue-router
 - UI 组件库：Element Plus（按需自动引入）
+- 样式：Tailwind CSS v4（工具类；**刻意未引入 preflight**）
 - **包管理器：pnpm**（`pnpm-lock.yaml` 为唯一锁文件）
 
 ```text
@@ -20,6 +21,7 @@ src/
   router/index.ts    # 路由定义
   stores/            # Pinia stores
   composables/       # 组合式函数
+  styles/            # 全局样式入口（Tailwind v4）
   types/             # unplugin 自动生成的类型声明（需提交，勿手改）
 ```
 
@@ -80,6 +82,54 @@ Version 不符时 pnpm 只会打印 `Unsupported engine` 警告而不会中断�
 - **语言**：`src/App.vue` 用 `<el-config-provider :locale="zhCn">` 包裹根节点，文案为简体中文。新增全局配置（尺寸、命名空间、zIndex 等）也加在这里。
 - **深色模式**：`element-plus/theme-chalk/dark/css-vars.css` 已在 `src/main.ts` 引入，暗色变量挂在 `html.dark` 下。开关逻辑位于 `src/composables/useDarkMode.ts`（模块级单例，优先级：localStorage 用户选择 > 系统偏好）。自带样式请用 `var(--el-*)` 变量，才能跟随主题。
 
+## 样式（Tailwind CSS v4）
+
+工具类方案。配置在 `src/styles/index.css`（入口）+ `vite.config.ts` 的 `tailwindcss()` 插件，在 `main.ts` 引入。
+
+- v4 是 **CSS 优先配置**：没有 `tailwind.config.js`，主题定制写 `@theme`，内容扫描由 Vite 插件顺着模块图自动完成（不需要 `content` 数组）。
+- 加新工具类不用改任何配置，直接在模板里写。
+
+### 刻意没有引入 preflight
+
+只引了 `theme.css` 与 `utilities.css`，**没有引 `preflight.css`**。preflight 是全局重置，会冲掉 Element Plus 的组件样式——`button { background-color: transparent }` 让主按钮失去背景色，`*, ::before, ::after { border: 0 solid }` 让部分组件边框消失。既然已有组件库负责基础样式，工具类就够了。
+
+**代价**：没有全局重置，原生标签的浏览器默认样式（`h1` 的字号/外边距、`ul` 圆点等）要自己用工具类处理。
+
+### ⚠️ 最大的坑：Tailwind 工具类盖不过 Element Plus
+
+Element Plus 的样式是**不带 `@layer` 的普通 CSS**，而 Tailwind 工具类在 `@layer utilities` 里。按 CSS 级联规则 —— **未分层的样式优先级高于任何 `@layer` 内的样式，且与书写顺序无关**（已用构建产物验证：`.el-input` 处于 brace depth 0，`.w-56` 在 `@layer utilities` 内）。
+
+所以给 Element Plus 组件加工具类默认**不生效**：
+
+```html
+<!-- 无效：.el-input 自己写了 width:100%（未分层），盖过 .w-56 -->
+<el-input class="w-56" />
+
+<!-- 有效：! 后缀提升为 !important -->
+<!-- 注意 v4 的 important 是后缀 w-56!，不是 v3 的前缀 !w-56 -->
+<el-input class="w-56!" />
+```
+
+要覆盖组件样式，一律加 `!` 后缀。
+
+给**原生元素**（`div` / `p` / `h1`…）加工具类不受影响——那些只有浏览器默认样式，优先级本来就低于作者样式。
+
+### 深色模式已对齐
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+让 `dark:` 跟随 Element Plus 的 `html.dark` 类，而不是默认的 `prefers-color-scheme`，两边共用同一个开关。已验证编译产物为 `.dark\:bg-white\/10:where(.dark,.dark *)`。
+
+### 颜色约定
+
+写颜色优先用 `var(--el-*)`，才能跟随主题切换，如 `text-[var(--el-text-color-primary)]`。Tailwind 自带色板（`text-red-500` 等）是固定值，不会跟随暗色模式，除非配合 `dark:` 显式写两套。
+
+### 尚未安装
+
+`prettier-plugin-tailwindcss`（按官方顺序自动排序 class）目前**没有**装。需要的话再加上。
+
 ## 代码规范
 
 - **格式**：由 Prettier 决定（`.prettierrc.json`）——单引号、无分号、行宽 100。不要手工调整格式，交给工具。
@@ -87,6 +137,7 @@ Version 不符时 pnpm 只会打印 `Unsupported engine` 警告而不会中断�
 - **类型**：提交前必须通过 `pnpm type-check`，不要用 `any` 或 `@ts-ignore` 绕过。
 - **Vue**：统一使用 `<script setup lang="ts">`，组件文件用 PascalCase 命名。
 - 改动 `src/` 下的代码后，运行 `pnpm lint` 再提交。
+- `.claude/**` 已在 eslint 的 `globalIgnores` 中排除，所以 agent 往 `.claude/logs/` 写临时脚本不会影响 `pnpm lint`。
 
 ## Git 约定
 

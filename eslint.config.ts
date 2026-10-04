@@ -15,7 +15,9 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  // .claude/ 放的是 agent 配置与会话临时产物（见 .claude/agent.md），
+  // 不属于源码，不该参与 lint —— 否则 agent 往 .claude/logs/ 写个 .cjs 就会让 pnpm lint 挂掉。
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '.claude/**']),
 
   ...pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,

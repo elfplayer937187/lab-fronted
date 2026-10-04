@@ -1,0 +1,15 @@
+/**
+ * Tailwind CSS v4 入口。
+ *
+ * v4 是 CSS 优先配置：没有 tailwind.config.js，主题定制写在 @theme 里，
+ * 内容扫描由 @tailwindcss/vite 顺着模块图自动完成（不需要 content 数组）。
+ */
+
+/* 声明层级顺序。Element Plus 的样式是不带 @layer 的普通 CSS，
+   按 CSS 级联规则，"未分层"的样式优先级高于任何 @layer 内的样式 ——
+   也就是说 Element Plus 会盖过 Tailwind 工具类。想反向覆盖见 README/agent.md。 */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import './settings.css';

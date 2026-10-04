@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
@@ -11,6 +12,8 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig({
   plugins: [
     vue(),
+    // Tailwind v4：靠 Vite 模块图自动扫描内容，无需 content 配置
+    tailwindcss(),
     // 自动引入 ElMessage / ElMessageBox / ElNotification 等函数式 API 及其样式
     AutoImport({
       resolvers: [ElementPlusResolver()],

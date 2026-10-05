@@ -80,6 +80,13 @@
   }
 }
 
+/* 全局 CSS 变量。用法：CSS 里 var(--nav-width)，Tailwind 里 w-[var(--nav-width)]
+   注意改这里要同步改 NavComponent 的宽度（当前 = w-60 = 15rem = 240px）。 */
+:root {
+  --nav-width: 15rem;
+  --logo-height: 3.5rem;
+}
+
 a {
   text-decoration: none;
 }

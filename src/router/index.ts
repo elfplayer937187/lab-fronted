@@ -8,14 +8,9 @@ const router = createRouter({
       path: '/',
       name: 'home',
       redirect: '/dashboard',
-      children: [
-        {
-          path: 'dashboard',
-          name: 'dashboard',
-          component: () => import('@/views/DashboardLayout.vue'),
-        },
-      ],
+      children: [],
     },
+    // 登录和注册页面
     {
       path: '/auth',
       name: 'auth',
@@ -33,6 +28,12 @@ const router = createRouter({
           component: () => import('@/views/RegisterLayout.vue'),
         },
       ],
+    },
+    // home界面
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('@/views/DashboardLayout.vue'),
     },
   ],
 })

@@ -53,7 +53,12 @@
         </el-form-item>
       </el-form>
       <div class="mt-4 text-sm text-gray-500 text-center">
-        没有账号? <span class="text-blue-500 cursor-pointer hover:text-blue-700">去注册！</span>
+        没有账号?
+        <span
+          class="text-blue-500 cursor-pointer hover:text-blue-700"
+          @click="router.push('/auth/register')"
+          >去注册！</span
+        >
       </div>
     </el-card>
   </div>
@@ -62,7 +67,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-
+import router from '@/router'
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 
@@ -96,6 +101,16 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 .login-card {
   display: flex;
   flex-direction: column;
+
+  /* 毛玻璃：只让“卡片这一层”半透明，内部文字/按钮保持原色不透明。
+     注意不能用父级的 opacity —— 那会把整棵子树（含文字）一起变淡。 */
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  /* 半透明白描边，模拟玻璃反光的边缘 */
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  /* 让卡片从背景里“浮”起来 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* body 只负责把高度让给 form（不再做居中），

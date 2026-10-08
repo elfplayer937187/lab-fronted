@@ -5,7 +5,7 @@
         <el-icon><component :is="IsFold ? 'ArrowRight' : 'ArrowLeft'"></component></el-icon>
       </el-button>
     </div>
-    <div class="right flex gap-2">
+    <div class="right flex gap-2 justify-center items-center">
       <el-button type="primary" plain circle>
         <el-icon><Refresh /></el-icon>
       </el-button>
@@ -15,15 +15,33 @@
       <el-button type="primary" plain circle>
         <el-icon><User /></el-icon>
       </el-button>
-      <!-- <el-image :src="" fit="fill" /> -->
+      <el-avatar :src="LoginLabel" class="ml-4"></el-avatar>
+      <!-- 用户名称 -->
+      <el-dropdown>
+        <span class="el-dropdown-link cursor-pointer">
+          {{ userName }}
+          <el-icon class="hover-arrow transition-transform duration-300">
+            <ArrowDown />
+          </el-icon>
+        </span>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item @click="HandleLogout">退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-
+import LoginLabel from '@/assets/images/Login-Label.png'
 const IsFold = ref(false)
+const userName = ref('Admin')
+const HandleLogout = () => {
+  console.log('退出登录')
+}
 </script>
 
 <style scoped lang="css"></style>

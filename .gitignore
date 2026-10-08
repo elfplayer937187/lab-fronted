@@ -45,3 +45,6 @@ __screenshots__/
 # Claude Code
 .claude/logs/
 
+#.env files
+.env
+.env.production

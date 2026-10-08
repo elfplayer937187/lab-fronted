@@ -13,20 +13,25 @@
         label-position="right"
         label-width="80px"
       >
-        <el-form-item prop="input1" label="用户名" :required="true">
-          <el-input v-model="form.input1" placeholder="请输入用户名" :clearable="true"> </el-input>
+        <el-form-item prop="username" label="用户名" :required="true">
+          <el-input v-model="form.username" placeholder="请输入用户名" :clearable="true">
+          </el-input>
         </el-form-item>
-        <el-form-item prop="input2" label="密码" :required="true">
-          <el-input v-model="form.input2" placeholder="请输入密码" :clearable="true"> </el-input>
+        <el-form-item prop="password" label="密码" :required="true">
+          <el-input v-model="form.password" placeholder="请输入密码" :clearable="true"> </el-input>
         </el-form-item>
-        <el-form-item prop="input3" label="确认密码" :required="true">
-          <el-input v-model="form.input3" placeholder="请输入" :clearable="true"> </el-input>
+        <el-form-item prop="confirmPassword" label="确认密码" :required="true">
+          <el-input v-model="form.confirmPassword" placeholder="请输入确认密码" :clearable="true">
+          </el-input>
         </el-form-item>
-        <el-form-item prop="input4" label="手机号">
-          <el-input v-model="form.input4" placeholder="请输入手机号" :clearable="true"> </el-input>
+        <el-form-item prop="name" label="昵称" :required="true">
+          <el-input v-model="form.name" placeholder="请输入昵称" :clearable="true"> </el-input>
         </el-form-item>
-        <el-form-item prop="input5" label="邮箱">
-          <el-input v-model="form.input5" placeholder="请输入" :clearable="true"> </el-input>
+        <el-form-item prop="phone" label="手机号" :required="true">
+          <el-input v-model="form.phone" placeholder="请输入手机号" :clearable="true"> </el-input>
+        </el-form-item>
+        <el-form-item prop="email" label="邮箱">
+          <el-input v-model="form.email" placeholder="请输入邮箱" :clearable="true"> </el-input>
         </el-form-item>
       </el-form>
       <el-button type="primary" @click="submitForm(formRef)">注册</el-button>
@@ -49,16 +54,17 @@ import { ref } from 'vue'
 
 const formRef = ref<FormInstance>()
 const form = ref({
-  input1: '',
-  input2: '',
-  input3: '',
-  input4: '',
-  input5: '',
+  username: '',
+  password: '',
+  confirmPassword: '',
+  name: '',
+  phone: '',
+  email: '',
 })
 const rules = ref({
-  input1: [{ required: true, message: '', trigger: 'blur' }],
-  input2: [{ required: true, message: '', trigger: 'blur' }],
-  input3: [{ required: true, message: '', trigger: 'blur' }],
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  confirmPassword: [{ required: true, message: '请确认密码', trigger: 'blur' }],
 })
 
 const submitForm = async (formEl: FormInstance | undefined) => {

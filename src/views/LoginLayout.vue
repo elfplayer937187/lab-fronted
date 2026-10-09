@@ -16,10 +16,10 @@
         class="flex-1 flex flex-col justify-evenly gap-4"
         @submit.prevent="submitForm(formRef)"
       >
-        <el-form-item prop="input1">
+        <el-form-item prop="username">
           <el-input
             prefix-icon="User"
-            v-model="form.input1"
+            v-model="form.username"
             placeholder="请输入账号"
             :maxlength="20"
             size="large"
@@ -27,10 +27,10 @@
           />
         </el-form-item>
 
-        <el-form-item prop="input2">
+        <el-form-item prop="password">
           <el-input
             prefix-icon="Lock"
-            v-model="form.input2"
+            v-model="form.password"
             type="password"
             placeholder="请输入密码"
             :maxlength="20"
@@ -47,6 +47,7 @@
             size="large"
             class="w-full tracking-widest"
             :loading="loading"
+            @click="HandleLogin"
           >
             登 录
           </el-button>
@@ -65,28 +66,24 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import router from '@/router'
 import { reqLogin } from '@/apis/auth/auth'
+import useUserStore from '@/stores/modules/user.ts'
+import { storeToRefs } from 'pinia'
+import { setToken } from '@/utils/token'
+const userStore = useUserStore()
+const { userInfo, token } = storeToRefs(userStore)
 const formRef = ref<FormInstance>()
 const loading = ref(false)
-onMounted(async () => {
-  const res = await reqLogin({
-    username: 'admin',
-    password: '123456',
-  })
-  console.log(res)
+const form = reactive({
+  username: '',
+  password: '',
 })
-
-const form = ref({
-  input1: '',
-  input2: '',
-})
-
-const rules: FormRules<typeof form.value> = {
-  input1: [{ required: true, message: '请输入账号', trigger: 'blur', min: 3, max: 20 }],
-  input2: [{ required: true, message: '请输入密码', trigger: 'blur', min: 3, max: 20 }],
+const rules: FormRules<typeof form> = {
+  username: [{ required: true, message: '请输入账号', trigger: 'blur', min: 3, max: 20 }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur', min: 3, max: 20 }],
 }
 
 const submitForm = async (formEl: FormInstance | undefined) => {
@@ -97,7 +94,26 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   loading.value = true
   try {
     // TODO: 接入登录接口
-    console.log('submit!', form.value)
+    console.log('submit!', form)
+  } finally {
+    loading.value = false
+  }
+}
+const HandleLogin = async () => {
+  if (!formRef.value) return
+  const FormIsFormat = await formRef.value?.validate()
+  if (!FormIsFormat) return
+  loading.value = true
+  try {
+    const res = await reqLogin(form)
+    if (res.code === 200) {
+      ElMessage.success('登录成功')
+      token.value = res.data?.token || ''
+      userInfo.value = res.data
+      setToken(token.value || '')
+
+      router.push('/')
+    }
   } finally {
     loading.value = false
   }

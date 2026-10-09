@@ -13,7 +13,7 @@
         <el-icon><Setting /></el-icon>
       </el-button>
       <el-button type="primary" plain circle>
-        <el-icon><User /></el-icon>
+        <el-icon><FullScreen /></el-icon>
       </el-button>
       <el-avatar :src="LoginLabel" class="ml-4"></el-avatar>
       <!-- 用户名称 -->
@@ -37,10 +37,16 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import LoginLabel from '@/assets/images/Login-Label.png'
+import { useRouter } from 'vue-router'
+import useUserStore from '@/stores/modules/user'
+import { FullScreen } from '@element-plus/icons-vue'
+const { clearUserStore } = useUserStore()
+const router = useRouter()
 const IsFold = ref(false)
 const userName = ref('Admin')
 const HandleLogout = () => {
-  console.log('退出登录')
+  clearUserStore()
+  router.push('/auth/login')
 }
 </script>
 

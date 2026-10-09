@@ -7,21 +7,35 @@
         </div>
       </template>
       <el-form
-        v-model="form"
-        :rules="rules"
         ref="formRef"
+        :model="form"
+        :rules="rules"
         label-position="right"
         label-width="80px"
+        @submit.prevent="HandleRegister"
       >
         <el-form-item prop="username" label="用户名" :required="true">
           <el-input v-model="form.username" placeholder="请输入用户名" :clearable="true">
           </el-input>
         </el-form-item>
         <el-form-item prop="password" label="密码" :required="true">
-          <el-input v-model="form.password" placeholder="请输入密码" :clearable="true"> </el-input>
+          <el-input
+            v-model="form.password"
+            type="password"
+            show-password
+            placeholder="请输入密码"
+            :clearable="true"
+          >
+          </el-input>
         </el-form-item>
         <el-form-item prop="confirmPassword" label="确认密码" :required="true">
-          <el-input v-model="form.confirmPassword" placeholder="请输入确认密码" :clearable="true">
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            show-password
+            placeholder="请输入确认密码"
+            :clearable="true"
+          >
           </el-input>
         </el-form-item>
         <el-form-item prop="name" label="昵称" :required="true">
@@ -34,7 +48,14 @@
           <el-input v-model="form.email" placeholder="请输入邮箱" :clearable="true"> </el-input>
         </el-form-item>
       </el-form>
-      <el-button type="primary" @click="submitForm(formRef)">注册</el-button>
+      <el-button
+        type="primary"
+        native-type="submit"
+        :loading="loading"
+        @click="HandleRegister"
+        class="w-full tracking-widest"
+        >注册</el-button
+      >
       <div class="mt-4 text-sm text-gray-500 text-center">
         已有账号?
         <span
@@ -48,12 +69,14 @@
 </template>
 
 <script lang="ts" setup>
-import type { FormInstance } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import router from '@/router'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
+import { reqRegister } from '@/apis/auth/auth'
 
 const formRef = ref<FormInstance>()
-const form = ref({
+const loading = ref(false)
+const form = reactive({
   username: '',
   password: '',
   confirmPassword: '',
@@ -61,21 +84,54 @@ const form = ref({
   phone: '',
   email: '',
 })
-const rules = ref({
+const rules: FormRules<typeof form> = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  confirmPassword: [{ required: true, message: '请确认密码', trigger: 'blur' }],
-})
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度为 6-20 位', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    {
+      // 两次输入必须一致
+      validator: (_rule, value, callback) => {
+        if (value !== form.password) callback(new Error('两次输入的密码不一致'))
+        else callback()
+      },
+      trigger: 'blur',
+    },
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' },
+  ],
+  // 非必填：留空时不校验（Element Plus 会跳过空值的类型校验）
+  email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
+}
 
-const submitForm = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return
-  await formEl.validate((valid, fields) => {
-    if (valid) {
-      console.log('submit!')
-    } else {
-      console.log('error submit!', fields)
+const HandleRegister = async () => {
+  if (!formRef.value) return
+  const FormIsFormat = await formRef.value.validate().catch(() => false)
+  if (!FormIsFormat) return
+
+  loading.value = true
+  try {
+    // 表单内部用 camelCase，提交前转成后端契约的下划线字段
+    const res = await reqRegister({
+      username: form.username,
+      password: form.password,
+      confirm_password: form.confirmPassword,
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+    })
+    if (res.code === 200) {
+      ElMessage.success('注册成功，请登录')
+      router.push('/auth/login')
     }
-  })
+  } finally {
+    loading.value = false
+  }
 }
 
 // const resetForm = (formEl: FormInstance | undefined) => {

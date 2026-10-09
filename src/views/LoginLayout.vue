@@ -65,11 +65,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import router from '@/router'
+import { reqLogin } from '@/apis/auth/auth'
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+onMounted(async () => {
+  const res = await reqLogin({
+    username: 'admin',
+    password: '123456',
+  })
+  console.log(res)
+})
 
 const form = ref({
   input1: '',

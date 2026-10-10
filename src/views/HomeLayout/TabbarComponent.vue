@@ -58,8 +58,9 @@ import useConfigStore from '@/stores/modules/config'
 import { storeToRefs } from 'pinia'
 
 const { clearUserStore } = useUserStore()
+const { userInfo } = storeToRefs(useUserStore())
 const router = useRouter()
-const userName = ref('Admin')
+const userName = ref(userInfo.value?.name) || '暂无'
 
 // 折叠状态与 NavComponent 共用 config store
 const configStore = useConfigStore()

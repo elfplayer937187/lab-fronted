@@ -1,7 +1,9 @@
 <template>
   <el-drawer v-model="visible" title="系统设置" direction="rtl" size="320px">
     <div class="flex flex-col gap-6">
-      <div class="flex items-center justify-between">
+      <div
+        class="flex items-center justify-between px-3 py-4 hover:bg-amber-200 dark:hover:bg-gray-700"
+      >
         <span class="text-(--el-text-color-primary)">暗色模式</span>
         <!-- isDark 是 readonly，没有 setter，只能单向绑定 + 事件里翻转 -->
         <el-switch
@@ -12,7 +14,9 @@
         />
       </div>
 
-      <div class="flex items-center justify-between">
+      <div
+        class="flex items-center justify-between px-3 py-4 hover:bg-amber-200 dark:hover:bg-gray-700"
+      >
         <span class="text-(--el-text-color-primary)">主题色</span>
         <span class="flex items-center gap-2">
           <span class="text-xs text-(--el-text-color-secondary)">开发中</span>
@@ -20,7 +24,9 @@
         </span>
       </div>
 
-      <div class="flex items-center justify-between">
+      <div
+        class="flex items-center justify-between px-3 py-4 hover:bg-amber-200 dark:hover:bg-gray-700"
+      >
         <span class="text-(--el-text-color-primary)">界面缩放</span>
         <span class="flex items-center gap-2">
           <span class="text-xs text-(--el-text-color-secondary)">开发中</span>
@@ -30,16 +36,35 @@
           </el-select>
         </span>
       </div>
+
+      <div
+        class="flex items-center justify-between px-3 py-4 hover:bg-amber-200 dark:hover:bg-gray-700 cursor-pointer"
+        @click="profileVisible = true"
+      >
+        <span class="text-(--el-text-color-primary)">修改个人资料</span>
+        <span
+          ><el-icon><ArrowRight></ArrowRight></el-icon
+        ></span>
+      </div>
     </div>
+    <UpdateProfileDialog v-model="profileVisible" />
   </el-drawer>
 </template>
 
 <script lang="ts" setup>
 import { Moon, Sunny } from '@element-plus/icons-vue'
 import { useDarkMode } from '@/composables/useDarkMode'
+import { ref } from 'vue'
+import UpdateProfileDialog from '@/views/HomeLayout/UpdateProfileDialog.vue'
 
 const visible = defineModel<boolean>({ default: false })
 const { isDark, toggle } = useDarkMode()
+
+const profileVisible = ref(false)
 </script>
 
-<style scoped lang="css"></style>
+<style scoped lang="css">
+.el-drawer :deep(.el-drawer__body) {
+  padding: 0;
+}
+</style>

@@ -8,27 +8,17 @@
       <h1 class="nav-title font-medium tracking-wide text-(--el-text-color-primary)">AI Lab</h1>
     </div>
 
-    <!-- 菜单：先写静态名称，后续接路由 -->
-    <el-menu class="nav-menu flex-1 overflow-y-auto" :collapse="isFold" default-active="1">
-      <el-menu-item index="1">
-        <el-icon><DataBoard /></el-icon>
-        <template #title>仪表盘</template>
-      </el-menu-item>
-      <el-menu-item index="2">
-        <el-icon><Files /></el-icon>
-        <template #title>数据集管理</template>
-      </el-menu-item>
-      <el-menu-item index="3">
-        <el-icon><Cpu /></el-icon>
-        <template #title>模型训练</template>
-      </el-menu-item>
-      <el-menu-item index="4">
-        <el-icon><User /></el-icon>
-        <template #title>用户管理</template>
-      </el-menu-item>
-      <el-menu-item index="5">
-        <el-icon><Setting /></el-icon>
-        <template #title>系统设置</template>
+    <!-- 菜单项由路由表的 children + meta 派生。router 模式内部走的是 router.push(index)，
+         不走 router-link，所以这里不需要声明式跳转标签 -->
+    <el-menu
+      class="nav-menu flex-1 overflow-y-auto"
+      :collapse="isFold"
+      :default-active="route.path"
+      router
+    >
+      <el-menu-item v-for="item in menus" :key="item.path" :index="item.path">
+        <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
+        <template #title>{{ item.title }}</template>
       </el-menu-item>
     </el-menu>
   </div>
@@ -38,9 +28,21 @@
 import logoUrl from '@/assets/images/Login-Label.png'
 import useConfigStore from '@/stores/modules/config'
 import { storeToRefs } from 'pinia'
+import { useRoute, useRouter } from 'vue-router'
 
 // 折叠状态在 config store 里，Tabbar 的按钮和这里读的是同一份
 const { isFold } = storeToRefs(useConfigStore())
+
+const route = useRoute()
+const router = useRouter()
+
+// 菜单不再单独维护一份，直接读 /dashboard 的 children —— 加页面只改 router/index.ts
+const dashboard = router.options.routes.find((r) => r.name === 'dashboard')
+const menus = (dashboard?.children ?? []).map((child) => ({
+  path: `/dashboard/${child.path}`,
+  title: child.meta?.title as string,
+  icon: child.meta?.icon as string,
+}))
 </script>
 
 <style scoped lang="css">

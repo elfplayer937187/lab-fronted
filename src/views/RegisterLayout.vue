@@ -12,6 +12,7 @@
         :rules="rules"
         label-position="right"
         label-width="80px"
+        @keydown.enter="HandleRegister"
         @submit.prevent="HandleRegister"
       >
         <el-form-item prop="username" label="用户名" :required="true">

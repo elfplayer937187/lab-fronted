@@ -1,4 +1,3 @@
-import { pa } from 'element-plus/es/locales.mjs'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -34,6 +33,15 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/views/DashboardLayout.vue'),
+      // 内容区由 ContentComponent 里的 <router-view> 承载，这里必须给出默认子页，
+      // 否则该层匹配为空、内容区会渲染成空白。后续菜单项接路由时往 children 里加即可。
+      children: [
+        {
+          path: '',
+          name: 'dashboard-home',
+          component: () => import('@/views/HomeLayout/DashboardHome.vue'),
+        },
+      ],
     },
   ],
 })

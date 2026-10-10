@@ -80,10 +80,14 @@
   }
 }
 
-/* 全局 CSS 变量。用法：CSS 里 var(--nav-width)，Tailwind 里 w-[var(--nav-width)]
-   注意改这里要同步改 NavComponent 的宽度（当前 = w-60 = 15rem = 240px）。 */
+/* 全局 CSS 变量。侧栏宽度由 NavComponent 直接读这两个变量（配 transition 做折叠动画），
+   Tailwind 侧要临时引用可写 w-(--nav-width) —— 括号是 v4 的 var 简写。 */
 :root {
   --nav-width: 15rem;
+  /* 侧栏折叠后的宽度。必须和 Element Plus 折叠菜单的实际宽度一致，
+     否则 el-menu 会撑破容器。EP 那边是算出来的，不是可配变量：
+     --el-menu-icon-width(24px) + --el-menu-base-level-padding(20px) * 2 = 64px */
+  --nav-collapsed-width: 4rem;
   --logo-height: 3.5rem;
 }
 
@@ -98,6 +102,11 @@ li {
 body {
   height: 100vh;
   background-color: #f1f4f6;
+}
+
+/* 暗色下页面底色改用 Element Plus 的变量，否则切主题时会留一圈浅色 */
+html.dark body {
+  background-color: var(--el-bg-color-page);
 }
 
 #app {

@@ -1,5 +1,5 @@
 <template>
-  <div class="content">
+  <div class="content p-5">
     <!-- v-slot 拿到当前匹配到的组件，交给 Transition 做进出场。
          refreshTick 挂在组件自己的 key 上，所以点「刷新」也会走一次过渡 -->
     <router-view v-slot="{ Component }">

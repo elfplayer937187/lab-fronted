@@ -12,6 +12,7 @@ const UserStore = defineStore('user', () => {
     token.value = null
     removeToken()
   }
+
   // setup store 必须显式 return，否则 store 实例上拿不到这些属性
   return { userInfo, token, clearUserStore }
 })

@@ -36,6 +36,7 @@ const router = createRouter({
       // 内容区由 ContentComponent 里的 <router-view> 承载。children 里没有 path: ''，
       // 所以 /dashboard 自身匹配不到子页，必须重定向到一个具体子路由，否则内容区空白
       redirect: '/dashboard/dashhome',
+      meta: { title: '首页', icon: 'Home' },
       // 侧栏菜单由这里的 children + meta 派生，加页面时改这一处即可。
       // icon 写的是组件名字符串，main.ts 已把图标全量全局注册，模板里能直接解析
       children: [
@@ -64,6 +65,12 @@ const router = createRouter({
           meta: { title: '实验室管理', icon: 'Cpu' },
         },
       ],
+    },
+    // 404 界面
+    {
+      path: '/:pathMatch(.*)*',
+      name: '404',
+      component: () => import('@/views/UnknownLayout.vue'),
     },
   ],
 })

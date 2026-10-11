@@ -1,9 +1,10 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-
 import App from './App.vue'
 import router from './router'
+// 路由守卫（登录态校验）。必须在 router 之后引入，它会往 router 上注册 beforeEach
+import './router/permission'
 
 // 全局样式入口：Tailwind v4（工具类，不含 preflight）
 import './styles/index.css'

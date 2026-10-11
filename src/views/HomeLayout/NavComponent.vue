@@ -1,5 +1,5 @@
 <template>
-  <div class="nav flex flex-col" :class="{ 'is-fold': isFold }">
+  <div class="nav flex flex-col h-full" :class="{ 'is-fold': isFold }">
     <!-- 顶部：logo + 标题 -->
     <div
       class="nav-header flex h-(--logo-height) shrink-0 items-center gap-2.5 px-4 border-b border-black/5 dark:border-white/10"
@@ -16,10 +16,7 @@
       :default-active="route.path"
       router
     >
-      <el-menu-item v-for="item in menus" :key="item.path" :index="item.path">
-        <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
-        <template #title>{{ item.title }}</template>
-      </el-menu-item>
+      <DynamicRouterMenu :menus="menus" />
     </el-menu>
   </div>
 </template>
@@ -29,20 +26,16 @@ import logoUrl from '@/assets/images/Login-Label.png'
 import useConfigStore from '@/stores/modules/config'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
-
+import DynamicRouterMenu from '@/components/DynamicRouterMenu.vue'
 // 折叠状态在 config store 里，Tabbar 的按钮和这里读的是同一份
-const { isFold } = storeToRefs(useConfigStore())
-
 const route = useRoute()
 const router = useRouter()
+const menus = router.getRoutes().filter((route) => {
+  return route.path !== '/dashboard' && route.path.includes('/dashboard')
+})
+console.log(menus)
 
-// 菜单不再单独维护一份，直接读 /dashboard 的 children —— 加页面只改 router/index.ts
-const dashboard = router.options.routes.find((r) => r.name === 'dashboard')
-const menus = (dashboard?.children ?? []).map((child) => ({
-  path: `/dashboard/${child.path}`,
-  title: child.meta?.title as string,
-  icon: child.meta?.icon as string,
-}))
+const { isFold } = storeToRefs(useConfigStore())
 </script>
 
 <style scoped lang="css">

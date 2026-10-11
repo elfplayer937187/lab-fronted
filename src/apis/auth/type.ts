@@ -1,7 +1,7 @@
 import type { BaseResponse } from '@/apis/common'
 
 export interface LoginData {
-  userId: number
+  id: number
   username: string
   name: string
   role: string
@@ -9,7 +9,6 @@ export interface LoginData {
   phone: string
   avatar: string | null
   status: number
-  token: string
 }
 
 export interface Login {

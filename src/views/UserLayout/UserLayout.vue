@@ -69,7 +69,7 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" min-width="200px" fixed="right">
-          <template>
+          <template #default>
             <el-button type="primary" plain size="small">编辑</el-button>
             <el-button type="danger" plain size="small">禁用</el-button>
             <el-button type="danger" plain size="small">删除</el-button>

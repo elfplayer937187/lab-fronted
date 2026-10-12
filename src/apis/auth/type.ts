@@ -9,6 +9,7 @@ export interface LoginData {
   phone: string
   avatar: string | null
   status: number
+  token: string
 }
 
 export interface Login {

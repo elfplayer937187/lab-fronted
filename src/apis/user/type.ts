@@ -24,6 +24,12 @@ export interface UpdateUser {
   avatar?: string
 }
 
+/** 启用 / 禁用指定用户。status 只有 0（禁用）和 1（启用），后端是 Literal[0, 1] */
+export interface UpdateUserStatus {
+  id: number
+  status: 0 | 1
+}
+
 export interface AddRequest {
   username: string
   password: string

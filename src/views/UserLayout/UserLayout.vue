@@ -53,7 +53,7 @@
           <template #default="{ row }">{{ row.name }}</template>
         </el-table-column>
         <el-table-column label="角色" width="100">
-          <template #default="{ row }">{{ roleText[row.role] ?? row.role }}</template>
+          <template #default="{ row }">{{ row.role }}</template>
         </el-table-column>
         <el-table-column label="邮箱" width="180">
           <template #default="{ row }">{{ row.email }}</template>
@@ -69,10 +69,21 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" min-width="200px" fixed="right">
-          <template>
+          <template #default="{ row }">
             <el-button type="primary" plain size="small">编辑</el-button>
-            <el-button type="danger" plain size="small">禁用</el-button>
-            <el-button type="danger" plain size="small">删除</el-button>
+            <!-- el-table 的 row 只声明成 DefaultRow，两处都断言成实际类型 -->
+            <el-button
+              :type="row.status === 1 ? 'danger' : 'success'"
+              :loading="statusLoadingId === row.id"
+              :disabled="statusLoadingId !== null"
+              plain
+              size="small"
+              @click="HandleUpdateStatus(row as UserInfo)"
+              >{{ row.status === 1 ? '禁用' : '启用' }}</el-button
+            >
+            <el-button type="danger" plain size="small" @click="HandleDeleteUser(row as UserInfo)"
+              >删除</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -81,7 +92,7 @@
         v-model:current-page="currentPage"
         v-model:page-size="limit"
         :page-sizes="[10, 20, 50, 100, 200]"
-        layout="total, sizes, prev, pager, next, jumper"
+        layout="total, sizes, prev, pager,->, next, jumper"
         :total="total"
         @change="HandlePaginationChange"
       >
@@ -124,22 +135,23 @@
 
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue'
-import { reqAddUser, reqGetUserList } from '@/apis/user/user'
+import { reqAddUser, reqDeleteUser, reqGetUserList, reqUpdateUserStatus } from '@/apis/user/user'
 import type { AddRequest, UserInfo } from '@/apis/user/type'
-import type { FormInstance, FormRules } from 'element-plus'
-
+import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import 'element-plus/theme-chalk/el-message-box.css'
 const FormRef = ref()
 const rules = {
   findName: [{ required: false, message: '请输入账号或昵称', trigger: 'blur' }],
 }
 const tableData = ref<UserInfo[]>([])
-// 接口给的是角色枚举值，界面上转成中文；没收录的值原样显示
-const roleText: Record<string, string> = { admin: '管理员', student: '学生' }
+
 const currentPage = ref(1)
 const limit = ref(10)
 const total = ref(0)
 
 const findName = ref('')
+// 正在改状态的用户 id，null 表示没有进行中的请求；用来锁住那一行的按钮
+const statusLoadingId = ref<number | null>(null)
 // 新增dialog
 const visible = ref(false)
 const submitting = ref(false)
@@ -209,6 +221,40 @@ onMounted(() => {
 })
 const HandlePaginationChange = async () => {
   await getUserList(currentPage.value, limit.value, findName.value)
+}
+const HandleUpdateStatus = async (row: UserInfo) => {
+  // 同一时刻只放一个请求出去。loading 要等 DOM 更新才生效，连点的第二下拦不住，这里再挡一道
+  if (statusLoadingId.value !== null) return
+  // 接口收的是「改成什么状态」，不是「切一下」，所以按当前状态取反
+  const status = row.status === 1 ? 0 : 1
+  statusLoadingId.value = row.id
+  try {
+    const res = await reqUpdateUserStatus({ id: row.id, status })
+    if (res.code === 200) {
+      ElMessage.success(status === 1 ? '启用成功' : '禁用成功')
+      getUserList(currentPage.value, limit.value, findName.value)
+    }
+  } catch {
+    // 失败提示已由 request 的响应拦截器弹出，这里吞掉即可
+  } finally {
+    statusLoadingId.value = null
+  }
+}
+const HandleDeleteUser = (row: UserInfo) => {
+  // 删除逻辑
+  ElMessageBox.confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    reqDeleteUser(row.id).then(() => {
+      ElMessage({
+        type: 'success',
+        message: '删除成功!',
+      })
+      getUserList(currentPage.value, limit.value, findName.value)
+    })
+  })
 }
 </script>
 

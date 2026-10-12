@@ -1,7 +1,7 @@
 <template>
   <div class="flex w-full h-full">
     <NavComponent
-      class="h-full bg-linear-120 border-r border-gray-200 dark:from-slate-900 dark:to-slate-800"
+      class="h-full bg-linear-120 border-r border-gray-200 dark:border-black dark:from-slate-900 dark:to-slate-800"
     ></NavComponent>
     <div class="right flex-1 overflow-y-scroll">
       <TabbarComponent

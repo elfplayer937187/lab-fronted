@@ -47,16 +47,24 @@ const router = createRouter({
           meta: { title: '首页', icon: 'DataBoard' },
         },
         {
-          path: 'user',
-          name: 'user',
-          component: () => import('@/views/UserLayout/UserLayout.vue'),
+          path: 'permission',
+          name: 'permission',
+          redirect: '/dashboard/permission/user',
           meta: { title: '用户管理', icon: 'User' },
-        },
-        {
-          path: 'role',
-          name: 'role',
-          component: () => import('@/views/RoleLayout/RoleLayout.vue'),
-          meta: { title: '角色管理', icon: 'Avatar' },
+          children: [
+            {
+              path: 'user',
+              name: 'user',
+              component: () => import('@/views/UserLayout/UserLayout.vue'),
+              meta: { title: '用户管理', icon: 'User' },
+            },
+            {
+              path: 'role',
+              name: 'role',
+              component: () => import('@/views/RoleLayout/RoleLayout.vue'),
+              meta: { title: '角色管理', icon: 'Avatar' },
+            },
+          ],
         },
         {
           path: 'lab',

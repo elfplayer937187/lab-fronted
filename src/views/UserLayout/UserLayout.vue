@@ -70,7 +70,9 @@
         </el-table-column>
         <el-table-column label="操作" align="center" min-width="200px" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" plain size="small">编辑</el-button>
+            <el-button type="primary" plain size="small" @click="openEditDialog(row as UserInfo)"
+              >编辑</el-button
+            >
             <!-- el-table 的 row 只声明成 DefaultRow，两处都断言成实际类型 -->
             <el-button
               :type="row.status === 1 ? 'danger' : 'success'"
@@ -98,18 +100,24 @@
       >
       </el-pagination>
     </el-card>
-    <!-- 新增dialog。字段与 AddRequest 一一对应，接口对多余字段是拒绝的，别多加 -->
-    <el-dialog v-model="visible" title="新增用户" width="600px">
+    <!-- 新增 / 编辑共用这个dialog。字段与 SaveUser 一一对应，接口对多余字段是拒绝的，别多加 -->
+    <el-dialog v-model="visible" :title="dialogTitle" width="600px">
       <el-form ref="addFormRef" :model="addForm" :rules="addRules" label-width="auto">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="addForm.username" placeholder="请输入用户名" clearable />
+          <!-- 更新接口不收 username（改账号等于换登录凭据），所以编辑时置灰只作展示 -->
+          <el-input
+            v-model="addForm.username"
+            :disabled="editingId !== null"
+            placeholder="请输入用户名"
+            clearable
+          />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input
             v-model="addForm.password"
             type="password"
             show-password
-            placeholder="请输入密码"
+            :placeholder="editingId === null ? '请输入密码' : '留空表示不修改密码'"
             clearable
           />
         </el-form-item>
@@ -134,9 +142,9 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue'
-import { reqAddUser, reqDeleteUser, reqGetUserList, reqUpdateUserStatus } from '@/apis/user/user'
-import type { AddRequest, UserInfo } from '@/apis/user/type'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { reqDeleteUser, reqGetUserList, reqSaveUser, reqUpdateUserStatus } from '@/apis/user/user'
+import type { SaveUser, UserInfo } from '@/apis/user/type'
 import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import 'element-plus/theme-chalk/el-message-box.css'
 const FormRef = ref()
@@ -152,11 +160,14 @@ const total = ref(0)
 const findName = ref('')
 // 正在改状态的用户 id，null 表示没有进行中的请求；用来锁住那一行的按钮
 const statusLoadingId = ref<number | null>(null)
-// 新增dialog
+// 新增 / 编辑共用这个弹窗，editingId 为 null 表示当前是新增
 const visible = ref(false)
 const submitting = ref(false)
+const editingId = ref<number | null>(null)
+const dialogTitle = computed(() => (editingId.value === null ? '新增用户' : '编辑用户'))
 const addFormRef = ref<FormInstance>()
-const addForm = reactive<AddRequest>({
+// 不带 id，reqSaveUser 会走创建接口
+const addForm = reactive<SaveUser>({
   username: '',
   password: '',
   name: '',
@@ -164,10 +175,11 @@ const addForm = reactive<AddRequest>({
   phone: '',
 })
 // 规则与注册页保持一致；邮箱非必填，留空时 EL 会跳过类型校验
-const addRules: FormRules<typeof addForm> = {
+const addRules = computed<FormRules<typeof addForm>>(() => ({
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
+    // 编辑时留空表示不改密码，所以只有新增才必填
+    { required: editingId.value === null, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度为 6-20 位', trigger: 'blur' },
   ],
   name: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
@@ -176,11 +188,25 @@ const addRules: FormRules<typeof addForm> = {
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' },
   ],
-}
+}))
 
 const openAddDialog = () => {
   // 上次取消留下的值要清掉，否则再打开还是旧数据
   addFormRef.value?.resetFields()
+  editingId.value = null
+  visible.value = true
+}
+
+const openEditDialog = (row: UserInfo) => {
+  // 先复位再填：既清掉上一次编辑残留的值，也顺手清掉校验红字
+  addFormRef.value?.resetFields()
+  addForm.username = row.username
+  // 不回填密码，留空即「不修改」
+  addForm.password = ''
+  addForm.name = row.name
+  addForm.email = row.email ?? ''
+  addForm.phone = row.phone ?? ''
+  editingId.value = row.id
   visible.value = true
 }
 
@@ -192,9 +218,13 @@ const confirmDialog = async () => {
 
   submitting.value = true
   try {
-    const res = await reqAddUser(addForm)
+    // 带 id 走更新，不带走新增
+    const payload: SaveUser = { ...addForm }
+    if (editingId.value !== null) payload.id = editingId.value
+
+    const res = await reqSaveUser(payload)
     if (res.code === 200) {
-      ElMessage.success('新增成功')
+      ElMessage.success(editingId.value === null ? '新增成功' : '修改成功')
       visible.value = false
       getUserList(currentPage.value, limit.value, findName.value)
     }

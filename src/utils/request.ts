@@ -11,7 +11,7 @@ request.interceptors.request.use(
     // 在模块顶层取一次会一直用登录前的空值
     const token = getToken()
     if (token) {
-      config.headers.token = token
+      config.headers['Authorization'] = `Bearer ${token}`
     }
 
     return config

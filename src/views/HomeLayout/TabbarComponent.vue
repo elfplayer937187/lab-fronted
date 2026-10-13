@@ -25,7 +25,7 @@
           </el-icon>
         </el-button>
       </el-tooltip>
-      <el-avatar :src="LoginLabel" class="ml-4"></el-avatar>
+      <el-avatar :src="userInfo?.avatar || LoginLabel" class="ml-4"></el-avatar>
       <!-- 用户名称 -->
       <el-dropdown>
         <span class="el-dropdown-link cursor-pointer">

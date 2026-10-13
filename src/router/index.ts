@@ -69,8 +69,22 @@ const router = createRouter({
         {
           path: 'lab',
           name: 'lab',
-          component: () => import('@/views/PermissionLayout/PermissionLayout.vue'),
           meta: { title: '实验室管理', icon: 'Cpu' },
+          redirect: '/dashboard/lab',
+          children: [
+            {
+              path: 'Laboratory',
+              name: 'Laboratory',
+              component: () => import('@/views/Lab/LabLayout.vue'),
+              meta: { title: '实验室管理', icon: 'Cpu' },
+            },
+            {
+              path: 'labdevice',
+              name: 'labdevice',
+              component: () => import('@/views/PermissionLayout/PermissionLayout.vue'),
+              meta: { title: '设备管理', icon: 'Device' },
+            },
+          ],
         },
       ],
     },

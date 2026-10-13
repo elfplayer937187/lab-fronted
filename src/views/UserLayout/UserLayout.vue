@@ -52,7 +52,7 @@
         <el-table-column label="昵称" width="120">
           <template #default="{ row }">{{ row.name }}</template>
         </el-table-column>
-        <el-table-column label="角色" width="100">
+        <el-table-column label="角色">
           <template #default="{ row }">{{ row.role }}</template>
         </el-table-column>
         <el-table-column label="邮箱" width="180">
@@ -86,6 +86,9 @@
             <el-button type="danger" plain size="small" @click="HandleDeleteUser(row as UserInfo)"
               >删除</el-button
             >
+            <el-button type="success" plain size="small" @click="HandleAssignRole(row as UserInfo)"
+              >分配角色</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -100,6 +103,24 @@
       >
       </el-pagination>
     </el-card>
+    <el-drawer v-model="RoleDrawerVisible" title="" direction="rtl">
+      <template #header>
+        <h3>分配角色权限</h3>
+      </template>
+      <template #default>
+        <template v-for="role in RoleList" :key="role.id">
+          <el-checkbox v-model="role.check">{{ role.name }}</el-checkbox>
+        </template>
+      </template>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="RoleDrawerVisible = false">取消</el-button>
+          <el-button type="primary" :loading="submitting" @click="confirmRoleDialog"
+            >确定</el-button
+          >
+        </div>
+      </template>
+    </el-drawer>
     <!-- 新增 / 编辑共用这个dialog。字段与 SaveUser 一一对应，接口对多余字段是拒绝的，别多加 -->
     <el-dialog v-model="visible" :title="dialogTitle" width="600px">
       <el-form ref="addFormRef" :model="addForm" :rules="addRules" label-width="auto">
@@ -143,10 +164,18 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { reqDeleteUser, reqGetUserList, reqSaveUser, reqUpdateUserStatus } from '@/apis/user/user'
+import {
+  reqAssignRole,
+  reqDeleteUser,
+  reqGetRoleList,
+  reqGetUserList,
+  reqSaveUser,
+  reqUpdateUserStatus,
+} from '@/apis/user/user'
 import type { SaveUser, UserInfo } from '@/apis/user/type'
 import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import 'element-plus/theme-chalk/el-message-box.css'
+const RoleDrawerVisible = ref(false)
 const FormRef = ref()
 const rules = {
   findName: [{ required: false, message: '请输入账号或昵称', trigger: 'blur' }],
@@ -189,7 +218,25 @@ const addRules = computed<FormRules<typeof addForm>>(() => ({
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' },
   ],
 }))
-
+// 角色权限
+interface Role {
+  id: number
+  name: string
+  check: boolean
+}
+const RoleList = ref<Role[]>([])
+const currentSelectUserId = ref<number | null>(null)
+const HandleAssignRole = (row: UserInfo) => {
+  RoleDrawerVisible.value = true
+  getRoleList(row)
+}
+const getRoleList = async (row: UserInfo) => {
+  const res = await reqGetRoleList(row.id)
+  if (res.code === 200) {
+    currentSelectUserId.value = row.id
+    RoleList.value = res.data || []
+  }
+}
 const openAddDialog = () => {
   // 上次取消留下的值要清掉，否则再打开还是旧数据
   addFormRef.value?.resetFields()
@@ -236,7 +283,13 @@ const getUserList = async (page: number, pageSize: number, findName: string) => 
   try {
     const res = await reqGetUserList(page, pageSize, findName)
     if (res.code === 200) {
-      tableData.value = res.data?.records || []
+      tableData.value =
+        res.data?.records.map((item) => {
+          return {
+            ...item,
+            role: item.roles.join(' | '),
+          }
+        }) || []
       total.value = res.data?.total || 0
       currentPage.value = res.data?.page || 1
       limit.value = res.data?.pageSize || 10
@@ -285,6 +338,33 @@ const HandleDeleteUser = (row: UserInfo) => {
       getUserList(currentPage.value, limit.value, findName.value)
     })
   })
+}
+const confirmRoleDialog = async () => {
+  // 点取消时 confirm 会 reject，转成 false 提前返回
+  const confirmed = await ElMessageBox.confirm('此操作将重新分配该用户角色, 是否继续?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).catch(() => false)
+  const userId = currentSelectUserId.value
+  if (!confirmed || userId === null) return
+
+  submitting.value = true
+  try {
+    const res = await reqAssignRole({
+      userId,
+      roleId: RoleList.value.filter((item) => item.check).map((item) => item.id),
+    })
+    if (res.code === 200) {
+      ElMessage.success(res.message ?? '分配成功')
+      RoleDrawerVisible.value = false
+      // 必须等分配落了库再拉列表，否则拿回来的还是旧角色。
+      // await 之后 Vue 的更新本来就会排到下一个 microtask，这里不需要 nextTick
+      await getUserList(currentPage.value, limit.value, findName.value)
+    }
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 

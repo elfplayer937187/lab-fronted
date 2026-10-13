@@ -16,6 +16,7 @@ export interface UserInfo {
   phone?: string
   avatar?: string
   status: number
+  roles: string[]
 }
 export interface UpdateUser {
   name?: string
@@ -51,6 +52,11 @@ export interface SaveUser {
   /** 只有更新接口认这个字段，不传表示不改 */
   status?: 0 | 1
 }
+export interface RoleListResponse {
+  id: number
+  name: string
+  check: boolean
+}
 
 /** 修改个人资料没有返回体，成功时 data 为 null */
 export type UpdateUserResponse = BaseResponse<null>
@@ -60,3 +66,5 @@ export type UserInfoResponse = BaseResponse<UserInfo>
 
 /** 用户列表：data.records 为当前页用户，data 本身可能为 null，取用前要判空 */
 export type UserListResponse = BaseResponse<PageResult<UserInfo>>
+
+export type RoleListResp = BaseResponse<RoleListResponse[]>

@@ -6,9 +6,11 @@ import type {
   SaveUser,
   UserSaveResponse,
   UpdateUserStatus,
+  RoleListResp,
 } from './type'
 import type { RegisterResponse } from '@/apis/auth/type'
 import type { BaseResponse } from '../common'
+import type { RoleListResponse } from '../role/type'
 
 enum API {
   UPDATE_URL = '/user/update',
@@ -23,6 +25,10 @@ enum API {
   DELETE_USER_URL = '/user/delete',
   // 启用 / 禁用用户
   UPDATE_STATUS_URL = '/user/updateStatus',
+  // 获取所有角色列表
+  GET_ROLE_LIST_URL = '/user/getAllRoles',
+  // 分配指定用户角色
+  ASSIGN_ROLE_URL = '/user/assign_role',
 }
 
 export const reqUpdateUser = (data: UpdateUser) =>
@@ -70,3 +76,9 @@ export const reqDeleteUser = (id: number) =>
 /** 无返回体，成功时 data 为 null */
 export const reqUpdateUserStatus = (data: UpdateUserStatus) =>
   request.put<BaseResponse<null>, BaseResponse<null>>(API.UPDATE_STATUS_URL, data)
+
+export const reqGetRoleList = (userId: number) =>
+  request.get<RoleListResp, RoleListResp>(API.GET_ROLE_LIST_URL + `/${userId}`)
+
+export const reqAssignRole = (data: { userId: number; roleId: number[] }) =>
+  request.post<BaseResponse<null>, BaseResponse<null>>(API.ASSIGN_ROLE_URL, data)

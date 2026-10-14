@@ -64,6 +64,12 @@ const router = createRouter({
               component: () => import('@/views/RoleLayout/RoleLayout.vue'),
               meta: { title: '角色管理', icon: 'Avatar' },
             },
+            {
+              path: 'menu',
+              name: 'menu',
+              component: () => import('@/views/MenuLayout/MenuLayout.vue'),
+              meta: { title: '菜单管理', icon: 'Menu' },
+            },
           ],
         },
         {

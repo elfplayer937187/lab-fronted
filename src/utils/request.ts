@@ -26,8 +26,10 @@ request.interceptors.response.use(
     const resp = response.data
     return resp
   },
+  // axios 对非 2xx 是 reject，err.message 永远只是 Request failed with status code 400。真正的 message 在 err.response.data.message。
   (error) => {
-    ElMessage.error(error.message)
+    console.dir(error)
+    ElMessage.error(error.response.data.message)
     return Promise.reject(error)
   },
 )

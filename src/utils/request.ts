@@ -29,7 +29,7 @@ request.interceptors.response.use(
   // axios 对非 2xx 是 reject，err.message 永远只是 Request failed with status code 400。真正的 message 在 err.response.data.message。
   (error) => {
     console.dir(error)
-    ElMessage.error(error.response.data.message)
+    ElMessage.error(error.response.data.message || error.message)
     return Promise.reject(error)
   },
 )

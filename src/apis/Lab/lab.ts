@@ -8,6 +8,7 @@ import type {
   SaveLab,
   LabUserResponse,
 } from './type'
+import type { BaseResponse } from '../common'
 
 enum API {
   CREATE_URL = '/lab/create',
@@ -17,6 +18,7 @@ enum API {
   DELETE_URL = '/lab/delete',
   GET_URL = '/lab/get',
   Get_User_URL = '/lab/all/manager',
+  UPDATE_LAB_IMAGE_URL = '/lab/update/image',
 }
 
 export const reqGetLabList = (query: LabListQuery) =>
@@ -42,3 +44,9 @@ export const reqDeleteLab = (labId: number) =>
   request.delete<DeleteLabResponse, DeleteLabResponse>(`${API.DELETE_URL}/${labId}`)
 
 export const reqGetLabUser = () => request.get<LabUserResponse, LabUserResponse>(API.Get_User_URL)
+
+export const reqUpdateLabImage = (labId: number, imageUrl: string) =>
+  request.post<BaseResponse<null>, BaseResponse<null>>(API.UPDATE_LAB_IMAGE_URL, {
+    id: labId,
+    imageUrl,
+  })

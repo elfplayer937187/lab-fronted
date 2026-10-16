@@ -1,6 +1,9 @@
 <template>
   <div class="menu-layout">
     <el-card>
+      <el-button type="primary" class="btn-green mb-4" @click="openAddDialog()"
+        >新增根节点</el-button
+      >
       <el-table ref="table" row-key="id" :data="tableData" style="width: 100%" border>
         <el-table-column label="Id" prop="" width="">
           <template #default="{ row }">{{ row.id }}</template>
@@ -11,20 +14,16 @@
         <el-table-column label="描述" prop="" width="">
           <template #default="{ row }">{{ row.description }} </template>
         </el-table-column>
-        <el-table-column label="操作" prop="" width="" align="center">
+        <el-table-column label="操作" prop="" min-width="250px" align="center">
           <template #default="{ row }">
             <el-button
               type="primary"
+              v-if="row.type === 1"
               :class="row.type === 1 ? `btn-green!` : ``"
               @click="openAddDialog(row as MenuTreeNode)"
-              >{{ '新增权限' }}</el-button
+              >{{ '新增子权限' }}</el-button
             >
-            <el-button
-              type="danger"
-              v-if="row.type === 2"
-              @click="handleDelete(row as MenuTreeNode)"
-              >删除权限</el-button
-            >
+            <el-button type="danger" @click="handleDelete(row as MenuTreeNode)">删除权限</el-button>
             <el-button type="warning" @click="openEditDialog(row as MenuTreeNode)"
               >修改权限</el-button
             >
@@ -50,6 +49,12 @@
             :maxlength="255"
             placeholder="请输入描述（可留空）"
           />
+        </el-form-item>
+        <el-form-item label="按钮或者菜单" prop="type">
+          <el-select label="" v-model="form.type">
+            <el-option label="菜单" :value="1"></el-option>
+            <el-option label="按钮" :value="2"></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <!-- :active-value 前面的冒号不能掉，掉了传的是字符串 "1"，后端 Literal[0,1] 会 400 -->
@@ -109,13 +114,21 @@ const rules: FormRules<typeof form> = {
   description: [{ max: 255, message: '描述最长 255 字', trigger: 'blur' }],
 }
 
-const openAddDialog = (row: MenuTreeNode) => {
+const openAddDialog = (row: MenuTreeNode | null = null) => {
   // 先复位再填：清掉上一次残留的值，也顺手清掉校验红字
   formRef.value?.resetFields()
-  form.pid = row.id
-  form.type = row.type
-  editingId.value = null
-  dialogTitle.value = row.type === 1 ? '新增节点' : '新增按钮'
+  if (row) {
+    form.pid = row.id
+    form.type = row.type
+    editingId.value = null
+    dialogTitle.value = row.type === 1 ? '新增节点' : '新增按钮'
+  } else {
+    //新增根节点
+    form.pid = null
+    dialogTitle.value = '新增根节点'
+    editingId.value = null
+    form.type = 1
+  }
   dialogVisible.value = true
 }
 

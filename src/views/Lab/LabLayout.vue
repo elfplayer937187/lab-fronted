@@ -29,6 +29,9 @@
             <el-button type="warning" plain size="small" @click="openEditDialog(row as LabInfo)"
               >修改实验室配置</el-button
             >
+            <el-button type="success" size="small" @click="openImageDialog(row.id)" plain>
+              修改实验室图片
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -125,11 +128,35 @@
         </div>
       </template>
     </el-dialog>
+    <el-dialog v-model="ImageDialogVisible" title="修改图片" width="600px">
+      <UploadForm
+        ref="UploadRef"
+        @form-change="
+          (data) => {
+            ImageForm = data
+          }
+        "
+      ></UploadForm>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="ImageDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmImageDialog">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { reqDeleteLab, reqGetLabList, reqGetLabUser, reqSaveLab } from '@/apis/Lab/lab'
+import UploadForm from '@/components/UploadForm.vue'
+import type { UploadResult } from '@/apis/common'
+import {
+  reqDeleteLab,
+  reqGetLabList,
+  reqGetLabUser,
+  reqSaveLab,
+  reqUpdateLabImage,
+} from '@/apis/Lab/lab'
 import type { LabInfo, LabStatus } from '@/apis/Lab/type'
 import DynamicTable from '@/components/DynamicSearchForm.vue'
 import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
@@ -211,7 +238,29 @@ const InputData = computed(
 // { nameKeyword: string; building: string; floor: string; manage_id: string }。
 // 套了 computed 之后要先取 ['value'] 才拿得到数组，再用 [number] 取出元素类型
 type LabSearchForm = { [K in (typeof InputData)['value'][number]['data']['prop']]: string }
+//  处理图片上传表单
+const ImageForm = ref<UploadResult>()
+const ImageDialogVisible = ref(false)
+const currentImageLabId = ref<number | null>(null)
+const UploadRef = ref()
+const openImageDialog = (id: number) => {
+  currentImageLabId.value = id
+  ImageDialogVisible.value = true
+}
 
+// 发送图片表单
+const confirmImageDialog = async () => {
+  const res = await reqUpdateLabImage(currentImageLabId.value!, ImageForm.value?.url!)
+
+  if (res.code === 200) {
+    ElMessageBox.alert('修改成功', '提示', {
+      confirmButtonText: '确定',
+    })
+    getLabList()
+    UploadRef.value?.clearForm()
+    ImageDialogVisible.value = false
+  }
+}
 // formValue 可选：翻页和首次加载没有搜索条件，这时不传，后端按不筛选处理
 const getLabList = async (formValue?: LabSearchForm) => {
   const res = await reqGetLabList({

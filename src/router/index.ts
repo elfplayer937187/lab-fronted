@@ -90,6 +90,13 @@ const router = createRouter({
               component: () => import('@/views/PermissionLayout/PermissionLayout.vue'),
               meta: { title: '设备管理', icon: 'Device' },
             },
+            // 实验室预约
+            {
+              path: 'labbook',
+              name: 'labbook',
+              component: () => import('@/views/LabBookLayout/LabBookLayout.vue'),
+              meta: { title: '实验室预约', icon: 'Book' },
+            },
           ],
         },
       ],

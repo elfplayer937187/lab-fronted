@@ -37,6 +37,12 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
+      // 上传接口回的是 /uploads/xxx.png 这种站内相对路径（不在 /api 下），
+      // 不代理的话 <img> 会打到 dev server 自己身上变成 404
+      '/uploads': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
     },
   },
 })

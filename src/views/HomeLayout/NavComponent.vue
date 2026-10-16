@@ -16,7 +16,7 @@
       :default-active="route.path"
       router
     >
-      <DynamicRouterMenu :menus="menus" />
+      <DynamicRouterMenu :menus="menus[0]?.children ?? []" parent-path="/dashboard" />
     </el-menu>
   </div>
 </template>
@@ -31,7 +31,7 @@ import DynamicRouterMenu from '@/components/DynamicRouterMenu.vue'
 const route = useRoute()
 const router = useRouter()
 const menus = router.getRoutes().filter((route) => {
-  return route.path !== '/dashboard' && route.path.includes('/dashboard')
+  return route.path === '/dashboard'
 })
 console.log(menus)
 

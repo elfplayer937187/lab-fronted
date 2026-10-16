@@ -11,7 +11,7 @@ request.interceptors.request.use(
     // 在模块顶层取一次会一直用登录前的空值
     const token = getToken()
     if (token) {
-      config.headers.token = token
+      config.headers['Authorization'] = `Bearer ${token}`
     }
 
     return config
@@ -26,8 +26,10 @@ request.interceptors.response.use(
     const resp = response.data
     return resp
   },
+  // axios 对非 2xx 是 reject，err.message 永远只是 Request failed with status code 400。真正的 message 在 err.response.data.message。
   (error) => {
-    ElMessage.error(error.message)
+    console.dir(error)
+    ElMessage.error(error.response.data.message || error.message)
     return Promise.reject(error)
   },
 )

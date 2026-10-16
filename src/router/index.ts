@@ -47,22 +47,57 @@ const router = createRouter({
           meta: { title: '首页', icon: 'DataBoard' },
         },
         {
-          path: 'user',
-          name: 'user',
-          component: () => import('@/views/UserLayout/UserLayout.vue'),
+          path: 'permission',
+          name: 'permission',
+          redirect: '/dashboard/permission/user',
           meta: { title: '用户管理', icon: 'User' },
-        },
-        {
-          path: 'role',
-          name: 'role',
-          component: () => import('@/views/RoleLayout/RoleLayout.vue'),
-          meta: { title: '角色管理', icon: 'Avatar' },
+          children: [
+            {
+              path: 'user',
+              name: 'user',
+              component: () => import('@/views/UserLayout/UserLayout.vue'),
+              meta: { title: '用户管理', icon: 'User' },
+            },
+            {
+              path: 'role',
+              name: 'role',
+              component: () => import('@/views/RoleLayout/RoleLayout.vue'),
+              meta: { title: '角色管理', icon: 'Avatar' },
+            },
+            {
+              path: 'menu',
+              name: 'menu',
+              component: () => import('@/views/MenuLayout/MenuLayout.vue'),
+              meta: { title: '菜单管理', icon: 'Menu' },
+            },
+          ],
         },
         {
           path: 'lab',
           name: 'lab',
-          component: () => import('@/views/PermissionLayout/PermissionLayout.vue'),
           meta: { title: '实验室管理', icon: 'Cpu' },
+          redirect: '/dashboard/lab',
+          children: [
+            {
+              path: 'Laboratory',
+              name: 'Laboratory',
+              component: () => import('@/views/Lab/LabLayout.vue'),
+              meta: { title: '实验室管理', icon: 'Cpu' },
+            },
+            {
+              path: 'labdevice',
+              name: 'labdevice',
+              component: () => import('@/views/PermissionLayout/PermissionLayout.vue'),
+              meta: { title: '设备管理', icon: 'Device' },
+            },
+            // 实验室预约
+            {
+              path: 'labbook',
+              name: 'labbook',
+              component: () => import('@/views/LabBookLayout/LabBookLayout.vue'),
+              meta: { title: '实验室预约', icon: 'Book' },
+            },
+          ],
         },
       ],
     },

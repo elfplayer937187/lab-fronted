@@ -88,14 +88,14 @@ const router = createRouter({
               path: 'labdevice',
               name: 'labdevice',
               component: () => import('@/views/PermissionLayout/PermissionLayout.vue'),
-              meta: { title: '设备管理', icon: 'Device' },
+              meta: { title: '设备管理', icon: 'Cpu' },
             },
             // 实验室预约
             {
               path: 'labbook',
               name: 'labbook',
               component: () => import('@/views/LabBookLayout/LabBookLayout.vue'),
-              meta: { title: '实验室预约', icon: 'Book' },
+              meta: { title: '实验室预约管理', icon: 'Cpu' },
             },
           ],
         },

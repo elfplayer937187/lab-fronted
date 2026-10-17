@@ -39,7 +39,7 @@ const HandleBeforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
 }
 const handleAvatarSuccess = (res: UploadResponse) => {
   if (res.code === 200) {
-    ElMessage.success(res.message ?? '上传成功')
+    ElMessage.success('上传成功')
     form.value = res.data
     emit('formChange', form.value)
   } else {

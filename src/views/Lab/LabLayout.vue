@@ -18,19 +18,36 @@
         <el-table-column label="结束时间" min-width="160">
           <template #default="{ row }">{{ row.close_time }}</template>
         </el-table-column>
-        <el-table-column label="操作" align="center" min-width="300" fixed="right">
+        <el-table-column label="操作" align="center" min-width="270px" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" plain size="small" @click="openDetail(row as LabInfo)"
-              >详情</el-button
+            <el-button
+              type="info"
+              plain
+              size="small"
+              icon="View"
+              @click="openDetail(row as LabInfo)"
+            ></el-button>
+            <el-button
+              type="danger"
+              plain
+              size="small"
+              icon="Delete"
+              @click="handleDelete(row as LabInfo)"
+            ></el-button>
+            <el-button
+              type="warning"
+              plain
+              size="small"
+              icon="Edit"
+              @click="openEditDialog(row as LabInfo)"
+            ></el-button>
+            <el-button
+              type="success"
+              size="small"
+              icon="Picture"
+              @click="openImageDialog(row.id)"
+              plain
             >
-            <el-button type="danger" plain size="small" @click="handleDelete(row as LabInfo)"
-              >删除实验室</el-button
-            >
-            <el-button type="warning" plain size="small" @click="openEditDialog(row as LabInfo)"
-              >修改实验室配置</el-button
-            >
-            <el-button type="success" size="small" @click="openImageDialog(row.id)" plain>
-              修改实验室图片
             </el-button>
           </template>
         </el-table-column>
@@ -253,12 +270,10 @@ const confirmImageDialog = async () => {
   const res = await reqUpdateLabImage(currentImageLabId.value!, ImageForm.value?.url!)
 
   if (res.code === 200) {
-    ElMessageBox.alert('修改成功', '提示', {
-      confirmButtonText: '确定',
-    })
     getLabList()
     UploadRef.value?.clearForm()
     ImageDialogVisible.value = false
+    ElMessage.success('修改成功')
   }
 }
 // formValue 可选：翻页和首次加载没有搜索条件，这时不传，后端按不筛选处理

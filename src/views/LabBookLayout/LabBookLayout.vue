@@ -1,16 +1,32 @@
 <template>
-  <div class="flex justify-between gap-20 mr-6">
-    <el-card class="w-70 shrink-0 card-big">
-      <h3 class="font-bold text-xl cursor-auto">预约概览</h3>
-      <div class="menu text-sm ml-4 flex flex-col gap-2 mt-4 text-gray-600">
-        <div class="">待审核：{{ waitAccept }}</div>
-        <div class="">已通过：{{ accept }}</div>
-        <div class="">全部：{{ total }}</div>
+  <div class="flex justify-between gap-6 mr-6">
+    <el-card class="w-70 shrink-0 self-start left-card card-big">
+      <h3 class="text-base font-bold text-gray-800">预约概览</h3>
+      <div class="mt-3 flex flex-col gap-1.5">
+        <div class="flex items-center justify-between rounded-md bg-amber-50 px-3 py-2">
+          <span class="text-sm text-gray-600">待审核</span>
+          <span class="text-lg font-semibold leading-none text-amber-600">{{ waitAccept }}</span>
+        </div>
+        <div class="flex items-center justify-between rounded-md bg-emerald-50 px-3 py-2">
+          <span class="text-sm text-gray-600">已通过</span>
+          <span class="text-lg font-semibold leading-none text-emerald-600">{{ accept }}</span>
+        </div>
+        <div class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2">
+          <span class="text-sm text-gray-600">全部</span>
+          <span class="text-lg font-semibold leading-none text-gray-700">{{ total }}</span>
+        </div>
       </div>
-      <h2 class="text-lg mt-4">筛选</h2>
-      <div class="select-bottom"></div>
+
+      <h3 class="mt-6 text-base font-bold text-gray-800">筛选</h3>
+      <div class="select-bottom mt-2">
+        <el-radio-group v-model="selectStatus" class="flex flex-col gap-1">
+          <el-radio value="all">全部</el-radio>
+          <el-radio :value="0">待审核</el-radio>
+          <el-radio :value="1">已通过</el-radio>
+        </el-radio-group>
+      </div>
     </el-card>
-    <div class="right-box flex-1">
+    <div class="right-box flex-1" v-if="formData.length > 0">
       <el-card class="card-big" v-for="book in formData" :key="book.id" @click="openDetail(book)">
         <img :src="book.image ?? ``" class="ml-3 h-30 w-30 rounded-lg" />
         <div class="">
@@ -37,6 +53,7 @@
         </div>
       </el-card>
       <el-pagination
+        v-if="formData.length > 0"
         class="mt-4"
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
@@ -48,6 +65,9 @@
       >
       </el-pagination>
     </div>
+    <el-card class="card-big flex-1" v-else>
+      <div class="text-gray-500">暂无数据</div>
+    </el-card>
     <!-- 详情弹窗。行数据来自 /lab_book/list/accept，字段够用，不再单独请求 -->
     <el-dialog v-model="detailVisible" title="预约详情" width="640px">
       <el-descriptions v-if="detailRow" :column="2" border>
@@ -84,7 +104,7 @@
 import { reqAcceptLabBook, reqGetLabBookWaitAcceptList } from '@/apis/lab_book/lab_book'
 import type { LabBookWaitAcceptInfo } from '@/apis/lab_book/type'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const formData = ref<LabBookWaitAcceptInfo[]>([])
 
@@ -97,6 +117,12 @@ const waitAccept = ref(0)
 const detailVisible = ref(false)
 const detailRow = ref<LabBookWaitAcceptInfo | null>(null)
 const remark = ref<string>('')
+
+// 筛选状态
+const selectStatus = ref<'all' | 0 | 1>('all')
+watch(selectStatus, () => {
+  getLabBookListAccept()
+})
 const openDetail = (book: LabBookWaitAcceptInfo) => {
   detailRow.value = book
   detailVisible.value = true
@@ -148,9 +174,11 @@ const getTag = (status: number) => {
 const getLabBookListAccept = async () => {
   const res = await reqGetLabBookWaitAcceptList(currentPage.value, pageSize.value)
   if (res.code === 200) {
-    console.log(res)
-
-    formData.value = res.data?.records || []
+    if (selectStatus.value === 'all') {
+      formData.value = res.data?.records || []
+    } else {
+      formData.value = res.data?.records.filter((item) => item.status === selectStatus.value) || []
+    }
     total.value = res.data?.total || 0
     accept.value = res.data?.accept ?? 0
     waitAccept.value = res.data?.wait_accept ?? 0
@@ -186,9 +214,21 @@ onMounted(() => {
   width: 100%;
   height: 100%;
 }
+/* EP 的 .el-radio-group 带 align-items:center，且是不带 @layer 的普通 CSS，会盖过
+   Tailwind 的 items-start。竖向排列时这个 center 会把每个选项各自水平居中，
+   表现成「全部」比「待审核」靠右。用作用域选择器提高优先级覆盖掉 */
+.select-bottom :deep(.el-radio-group) {
+  align-items: flex-start;
+}
+
 /* 全局 reset 把 td 的 vertical-align 从默认 middle 改成了 baseline，
    多行高时 label 会贴到底部。这里只在详情表格里恢复垂直居中 */
 .el-descriptions :deep(.el-descriptions__cell.is-bordered-label) {
   vertical-align: middle;
+}
+/* 左栏是筛选面板，不是可点的卡片：高度贴合内容（配合 self-start），
+   内边距用正常值，别用 space-between 把两块内容推到卡片两端 */
+.left-card :deep(.el-card__body) {
+  padding: 1.25rem;
 }
 </style>

@@ -68,7 +68,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" min-width="200px" fixed="right">
+        <el-table-column label="操作" align="center" min-width="300px" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" plain size="small" @click="openEditDialog(row as UserInfo)"
               >编辑</el-button

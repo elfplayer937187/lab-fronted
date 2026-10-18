@@ -5,6 +5,9 @@
       @submitForm="(v) => getLabList(v as LabSearchForm)"
     ></DynamicTable>
     <el-card class="mt-4">
+      <el-button type="primary" class="btn-green mb-4" @click="openCreateDialog"
+        >新增实验室</el-button
+      >
       <el-table :data="tableData" style="width: 100%" border>
         <el-table-column label="id" width="80" align="center">
           <template #default="{ row }">{{ row.id }}</template>
@@ -93,9 +96,14 @@
         </el-descriptions>
       </div>
     </el-dialog>
-    <!-- 修改弹窗。字段跟 SaveLab 对齐，但没放 image —— 那个要配上传组件，
+    <!-- 新增 / 修改共用这一个弹窗：表单字段完全一样，区别只在有没有 id。
+         字段跟 SaveLab 对齐，但没放 image —— 那个要配上传组件，
          不传的话后端是 exclude_unset，不会被清空 -->
-    <el-dialog v-model="editVisible" title="修改实验室配置" width="720px">
+    <el-dialog
+      v-model="editVisible"
+      :title="editForm.id ? '修改实验室配置' : '新增实验室'"
+      width="720px"
+    >
       <div class="max-h-[60vh] overflow-y-auto">
         <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="120px">
           <el-form-item label="实验室名称" prop="name">
@@ -334,6 +342,19 @@ const editRules: FormRules<typeof editForm> = {
   description: [{ max: 255, message: '描述最长 255 字', trigger: 'blur' }],
 }
 
+/**
+ * 新增和修改共用一个弹窗，靠 `editForm.id` 区分：
+ * 有 id 走 PUT /lab/update，没 id 走 POST /lab/create（由 reqSaveLab 内部判断）。
+ *
+ * resetFields 清掉上一次编辑残留的值和校验红字，但它只管带 prop 的表单项，
+ * id 没有对应的 form-item，得手动置空，否则会被当成"编辑"。
+ */
+const openCreateDialog = () => {
+  editFormRef.value?.resetFields()
+  editForm.id = undefined
+  editVisible.value = true
+}
+
 const openEditDialog = (row: LabInfo) => {
   // 先复位再回填：清掉上一次编辑残留的值，也顺手清掉校验红字
   editFormRef.value?.resetFields()
@@ -359,10 +380,17 @@ const confirmEdit = async () => {
 
   submitting.value = true
   try {
-    // 带了 id，reqSaveLab 会走 PUT /lab/update
-    const res = await reqSaveLab({ ...editForm })
+    // 带了 id，reqSaveLab 会走 PUT /lab/update；没有就走 POST /lab/create
+    const res = await reqSaveLab({
+      ...editForm,
+      // 后端这两个字段是 time 类型，只认 "08:00" 或 null，空字符串会 400。
+      // 表单里没填时是 ''，这里转成 undefined：JSON.stringify 会直接丢掉这个键，
+      // 等于「不传」，而不是传一个非法值
+      open_time: editForm.open_time || undefined,
+      close_time: editForm.close_time || undefined,
+    })
     if (res.code === 200) {
-      ElMessage.success('修改成功')
+      ElMessage.success(editForm.id ? '修改成功' : '新增成功')
       editVisible.value = false
       getLabList()
     }

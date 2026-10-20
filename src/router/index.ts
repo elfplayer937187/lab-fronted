@@ -46,6 +46,7 @@ const router = createRouter({
           component: () => import('@/views/HomeLayout/DashboardHome.vue'),
           meta: { title: '首页', icon: 'DataBoard' },
         },
+        // 权限管理
         {
           path: 'permission',
           name: 'permission',
@@ -72,6 +73,7 @@ const router = createRouter({
             },
           ],
         },
+        // 实验室管理
         {
           path: 'lab',
           name: 'lab',
@@ -98,6 +100,13 @@ const router = createRouter({
               meta: { title: '实验室预约管理', icon: 'Cpu' },
             },
           ],
+        },
+        // ai小助手
+        {
+          path: 'ai',
+          name: 'ai',
+          component: () => import('@/views/AI/AILayout.vue'),
+          meta: { title: 'ai小助手', icon: 'Robot' },
         },
       ],
     },

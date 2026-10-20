@@ -5,7 +5,7 @@
     ></NavComponent>
     <div class="right flex-1 overflow-y-scroll">
       <TabbarComponent
-        class="h-(--logo-height) bg-white/60 border-b border-black/5 dark:bg-slate-900/60 dark:border-white/10 flex items-center px-4"
+        class="sticky z-10 top-0 h-(--logo-height) bg-white border-b border-black/5 dark:bg-slate-900 dark:border-white/10 flex items-center px-4"
       ></TabbarComponent>
       <ContentComponent :refresh-tick="refreshTick"></ContentComponent>
     </div>

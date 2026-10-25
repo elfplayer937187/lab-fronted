@@ -39,7 +39,7 @@
         </ul>
       </div>
       <div
-        class="your-role flex items-center mt-4 gap-3 px-2 py-2 hover:bg-gray-200 dark:hover:bg-slate-700 transition-all rounded-2xl"
+        class="your-role flex items-center mt-4 gap-3 px-2 py-2 shadow-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-all rounded-2xl"
       >
         <!-- fit=cover + rounded-full：头像裁成圆形，和顶栏默认图保持同一套回退 -->
         <el-image
@@ -90,7 +90,7 @@
               <el-avatar
                 :size="32"
                 :src="msg.role === 'human' ? userInfo?.avatar || LoginLabel : undefined"
-                :class="msg.role === 'ai' ? 'shrink-0 bg-gray-600!' : 'shrink-0'"
+                :class="msg.role === 'ai' ? 'shrink-0 bg-pink-300!' : 'shrink-0'"
               >
                 <el-icon v-if="msg.role === 'ai'"><MagicStick /></el-icon>
               </el-avatar>
@@ -100,8 +100,8 @@
                 class="max-w-[50%] shadow-2xl px-4 py-2 rounded-2xl text-sm"
                 :class="[
                   msg.role === 'human'
-                    ? 'bg-gray-500 text-white'
-                    : 'bg-gray-400 text-gray-800 dark:bg-slate-600 dark:text-gray-100',
+                    ? 'bg-blue-300 text-white'
+                    : 'bg--400 text-gray-800 dark:bg-slate-600 dark:text-gray-100',
                 ]"
                 v-html="purify(msg.content)"
               ></div>
@@ -121,13 +121,12 @@
         <textarea class="text-area" v-model="myInput" @keyup.enter="HandleKeyEnter"></textarea>
         <!-- 发送按钮：绝对定位贴在输入框右下角 -->
         <div class="absolute right-3 bottom-3">
-          <!-- 自己画 loading 图标，不用 el-button 的 :loading：
+          <!-- 加载中不置灰，按钮变成"停止"：点一下打断当前 SSE
+               自己画图标，不用 el-button 的 :loading：
                它会额外塞一个 .el-icon 进去，circle 按钮里容易偏，两个图标也容易叠 -->
-          <el-button type="" @click="SendMessage" :disabled="loading" circle>
-            <el-icon :class="{ 'animate-spin': loading }">
-              <Loading v-if="loading" />
-              <Promotion v-else />
-            </el-icon>
+          <el-button type="" @click="loading ? CloseSSE() : SendMessage()" circle>
+            <span v-if="loading" class="stop-icon"></span>
+            <el-icon v-else><Promotion /></el-icon>
           </el-button>
         </div>
       </div>
@@ -214,6 +213,8 @@ const CreateNewChat = () => {
   myInput.value = ''
 }
 
+// 当前发送的请求Controller
+let abortController = null as AbortController | null
 const SendMessage = async () => {
   const text = myInput.value.trim()
   if (!text || loading.value) {
@@ -235,11 +236,18 @@ const SendMessage = async () => {
       reply,
     )
   } catch {
-    // 一个字都没吐出来就把空气泡撤掉；已经吐了一部分就保留，让用户看到断在哪里
-    if (!reply.content) nowChatMessages.value.pop()
-    myInput.value = text
-    ElMessage.error('请求失败，请重试')
+    // 真正的失败（网络/后端报错）才回填输入框并提示
+    if (abortController?.signal.aborted !== true) {
+      myInput.value = text
+      ElMessage.error('请求失败，请重试')
+    }
   } finally {
+    // 一个字都没吐出来就撤掉空气泡：点了"停止"、请求失败、后端只回了 done 都算。
+    // 已经吐了一部分就保留，让用户看到断在哪里。
+    // 用 indexOf 而不是 pop：期间要是切了会话，pop 会误删别人的最后一条
+    const emptyIndex = reply.content ? -1 : nowChatMessages.value.indexOf(reply)
+    if (emptyIndex !== -1) nowChatMessages.value.splice(emptyIndex, 1)
+    abortController = null
     loading.value = false
   }
 }
@@ -254,54 +262,63 @@ interface SSEChunk {
   thread_id?: string
   message?: string
 }
-
+const CloseSSE = () => {
+  if (abortController) abortController.abort()
+}
 /**
  * 流式聊天。内容不在这里拼接完再返回，而是逐片追加到调用方传进来的 reply 上，
  * 这样页面上能实时看到文字一个个冒出来。
  */
 const SSEOutput = async (payload: ChatRequest, reply: ChatMessage) => {
-  const abortController = new AbortController()
+  // 用局部引用的同一个 controller：StopMessage 打断后这里不会再误用新的
+  const controller = new AbortController()
+  abortController = controller
   let newThreadId: string | null = null
 
-  await fetchEventSource('/api/ai/v1/stream/chat', {
-    method: 'POST',
-    signal: abortController.signal,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify(payload),
-    // 切到后台标签页时默认会主动断开，模型还在吐字就白断了
-    openWhenHidden: true,
-    onmessage(event) {
-      if (!event.data) return
-      const chunk: SSEChunk = JSON.parse(event.data)
-      if (chunk.type === 'thread_id') {
-        newThreadId = chunk.thread_id ?? null
-      } else if (chunk.type === 'message') {
-        reply.content += chunk.message ?? ''
+  try {
+    await fetchEventSource('/api/ai/v1/stream/chat', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify(payload),
+      // 切到后台标签页时默认会主动断开，模型还在吐字就白断了
+      openWhenHidden: true,
+      onmessage(event) {
+        if (!event.data) return
+        const chunk: SSEChunk = JSON.parse(event.data)
+        if (chunk.type === 'thread_id') {
+          newThreadId = chunk.thread_id ?? null
+        } else if (chunk.type === 'message') {
+          reply.content += chunk.message ?? ''
+        }
+      },
+      onerror(error) {
+        // 抛出去让 fetchEventSource 停止重试，统一由 SendMessage 的 catch 提示
+        throw error
+      },
+    })
+  } finally {
+    // 新会话：id 在流开头就给了，但标题要等这轮结束才生成，所以列表放在最后刷。
+    // 被打断也刷一次：后端会话已经建好了，不刷的话左侧列表里看不到这一条
+    if (!nowChat.value && newThreadId) {
+      await getAIHistoryList()
+      nowChat.value = HistoryList.value.find((item) => String(item.thread_id) === newThreadId) ?? {
+        thread_id: Number(newThreadId),
+        title: '新会话',
+        createTime: '',
       }
-    },
-    onerror(error) {
-      // 抛出去让 fetchEventSource 停止重试，统一由 SendMessage 的 catch 提示
-      throw error
-    },
-  })
-
-  // 新会话：id 在流开头就给了，但标题要等这轮结束才生成，所以列表放在最后刷
-  if (!nowChat.value && newThreadId) {
-    await getAIHistoryList()
-    nowChat.value = HistoryList.value.find((item) => String(item.thread_id) === newThreadId) ?? {
-      thread_id: Number(newThreadId),
-      title: '新会话',
-      createTime: '',
     }
   }
 }
 </script>
 
 <style lang="css">
+/* 楷体：Windows 用 KaiTi，macOS 用 Kaiti SC / STKaiti，最后兜底 serif */
 .history-title {
+  font-family: KaiTi, 'Kaiti SC', STKaiti, '楷体', serif;
 }
 /* textarea 是原生表单控件，项目里没引 Tailwind preflight，
    UA 默认的 font / resize / box-sizing / 边框都不会被清掉，所以这里显式写全。 */
@@ -325,6 +342,15 @@ const SSEOutput = async (payload: ChatRequest, reply: ChatMessage) => {
 
 .text-area:focus {
   border-color: var(--el-color-primary);
+}
+
+/* 停止按钮里的实心方块，比转圈更能表达"点这里中断" */
+.stop-icon {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: currentColor;
 }
 
 /* 切换会话的过渡：进场 ease-out 轻微上浮淡入，离场快一点，避免拖沓 */

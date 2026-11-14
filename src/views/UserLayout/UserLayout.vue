@@ -35,6 +35,7 @@
     </el-card>
     <el-card>
       <el-button
+        v-permission="PERM.userCreate"
         @click="openAddDialog"
         type="primary"
         icon="Plus"
@@ -68,13 +69,28 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" min-width="300px" fixed="right">
+        <!-- 按钮全无权限时整列不渲染，避免留一个空的操作列 -->
+        <el-table-column
+          v-if="
+            hasPermission([PERM.userUpdate, PERM.userStatus, PERM.userDelete, PERM.userAssignRole])
+          "
+          label="操作"
+          align="center"
+          min-width="300px"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button type="primary" plain size="small" @click="openEditDialog(row as UserInfo)"
+            <el-button
+              v-permission="PERM.userUpdate"
+              type="primary"
+              plain
+              size="small"
+              @click="openEditDialog(row as UserInfo)"
               >编辑</el-button
             >
             <!-- el-table 的 row 只声明成 DefaultRow，两处都断言成实际类型 -->
             <el-button
+              v-permission="PERM.userStatus"
               :type="row.status === 1 ? 'danger' : 'success'"
               :loading="statusLoadingId === row.id"
               :disabled="statusLoadingId !== null"
@@ -83,10 +99,20 @@
               @click="HandleUpdateStatus(row as UserInfo)"
               >{{ row.status === 1 ? '禁用' : '启用' }}</el-button
             >
-            <el-button type="danger" plain size="small" @click="HandleDeleteUser(row as UserInfo)"
+            <el-button
+              v-permission="PERM.userDelete"
+              type="danger"
+              plain
+              size="small"
+              @click="HandleDeleteUser(row as UserInfo)"
               >删除</el-button
             >
-            <el-button type="success" plain size="small" @click="HandleAssignRole(row as UserInfo)"
+            <el-button
+              v-permission="PERM.userAssignRole"
+              type="success"
+              plain
+              size="small"
+              @click="HandleAssignRole(row as UserInfo)"
               >分配角色</el-button
             >
           </template>
@@ -173,8 +199,11 @@ import {
   reqUpdateUserStatus,
 } from '@/apis/user/user'
 import type { SaveUser, UserInfo } from '@/apis/user/type'
+import { PERM } from '@/constants/permissions'
+import useUserStore from '@/stores/modules/user'
 import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import 'element-plus/theme-chalk/el-message-box.css'
+const { hasPermission } = useUserStore()
 const RoleDrawerVisible = ref(false)
 const FormRef = ref()
 const rules = {

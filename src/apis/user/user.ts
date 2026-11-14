@@ -7,8 +7,8 @@ import type {
   UserSaveResponse,
   UpdateUserStatus,
   RoleListResp,
+  UserProfileResponse,
 } from './type'
-import type { RegisterResponse } from '@/apis/auth/type'
 import type { BaseResponse } from '../common'
 import type { RoleListResponse } from '../role/type'
 
@@ -35,7 +35,7 @@ export const reqUpdateUser = (data: UpdateUser) =>
   request.put<UpdateUserResponse, UpdateUserResponse>(API.UPDATE_URL, data)
 
 export const reqGetUserInfo = () =>
-  request.get<RegisterResponse, RegisterResponse>(API.GET_USERINFO_URL)
+  request.get<UserProfileResponse, UserProfileResponse>(API.GET_USERINFO_URL)
 
 export const reqGetUserList = (page: number, pageSize: number, keyword: string) =>
   request.get<UserListResponse, UserListResponse>(API.GET_USERLIST_URL, {

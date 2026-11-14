@@ -1,4 +1,5 @@
 import type { BaseResponse, PageResult } from '@/apis/common'
+import type { MenuTreeNode } from '@/apis/menu/type'
 
 /**
  * 角色实体。
@@ -27,6 +28,9 @@ export interface SaveRole {
   description?: string
   status?: 0 | 1
 }
+
+/** 角色已拥有的权限树，节点上的 check=1 表示该角色拥有此权限 */
+export type RolePermissionTreeResponse = BaseResponse<MenuTreeNode[]>
 
 /** 角色列表：data 可能为 null，取用前要判空 */
 export type RoleListResponse = BaseResponse<PageResult<RoleInfo>>

@@ -3,8 +3,9 @@ import { createPinia } from 'pinia'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
-// 路由守卫（登录态校验）。必须在 router 之后引入，它会往 router 上注册 beforeEach
+// 路由守卫（登录态 + 页面权限校验）。必须在 router 之后引入，它会往 router 上注册 beforeEach
 import './router/permission'
+import { permission } from '@/directives/permission'
 
 // 全局样式入口：Tailwind v4（工具类，不含 preflight）
 import './styles/index.css'
@@ -20,6 +21,9 @@ const app = createApp(App)
 for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(name, component)
 }
+
+// unplugin 只处理组件和 ElMessage 这类 API，指令不会被自动注册
+app.directive('permission', permission)
 
 app.use(createPinia())
 app.use(router)

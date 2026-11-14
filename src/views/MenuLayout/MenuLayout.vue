@@ -1,7 +1,11 @@
 <template>
   <div class="menu-layout">
     <el-card>
-      <el-button type="primary" class="btn-green mb-4" @click="openAddDialog()"
+      <el-button
+        v-permission="PERM.menuCreate"
+        type="primary"
+        class="btn-green mb-4"
+        @click="openAddDialog()"
         >新增根节点</el-button
       >
       <el-table ref="table" row-key="id" :data="tableData" style="width: 100%" border>
@@ -14,17 +18,32 @@
         <el-table-column label="描述" prop="" width="">
           <template #default="{ row }">{{ row.description }} </template>
         </el-table-column>
-        <el-table-column label="操作" prop="" min-width="250px" align="center">
+        <el-table-column
+          v-if="hasPermission([PERM.menuCreate, PERM.menuUpdate, PERM.menuDelete])"
+          label="操作"
+          prop=""
+          min-width="250px"
+          align="center"
+        >
           <template #default="{ row }">
             <el-button
+              v-permission="PERM.menuCreate"
               type="primary"
               v-if="row.type === 1"
               :class="row.type === 1 ? `btn-green!` : ``"
               @click="openAddDialog(row as MenuTreeNode)"
               >{{ '新增子权限' }}</el-button
             >
-            <el-button type="danger" @click="handleDelete(row as MenuTreeNode)">删除权限</el-button>
-            <el-button type="warning" @click="openEditDialog(row as MenuTreeNode)"
+            <el-button
+              v-permission="PERM.menuDelete"
+              type="danger"
+              @click="handleDelete(row as MenuTreeNode)"
+              >删除权限</el-button
+            >
+            <el-button
+              v-permission="PERM.menuUpdate"
+              type="warning"
+              @click="openEditDialog(row as MenuTreeNode)"
               >修改权限</el-button
             >
           </template>
@@ -74,9 +93,12 @@
 <script lang="ts" setup>
 import { reqDeleteMenu, reqGetMenuTree, reqSaveMenu } from '@/apis/menu/menu'
 import type { MenuTreeNode, SaveMenu } from '@/apis/menu/type'
+import { PERM } from '@/constants/permissions'
+import useUserStore from '@/stores/modules/user'
 import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import 'element-plus/theme-chalk/el-message-box.css'
 import { onMounted, reactive, ref } from 'vue'
+const { hasPermission } = useUserStore()
 const table = ref<MenuTreeNode[]>()
 const tableData = ref<MenuTreeNode[]>([])
 const getMenuTree = async () => {

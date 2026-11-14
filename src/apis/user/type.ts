@@ -25,6 +25,36 @@ export interface UpdateUser {
   avatar?: string
 }
 
+/** /user/getInfo 返回的权限项：type=1 是菜单，type=2 是按钮 */
+export interface PermissionItem {
+  id: number
+  code: string
+  name: string
+  pid: number | null
+  description?: string | null
+  type: 1 | 2
+  status: 0 | 1
+}
+
+/**
+ * /user/getInfo 的响应体。
+ *
+ * 注意它不是登录响应的形状：没有 role/roles，也没有 token，
+ * 权限是对象数组而不是字符串数组。
+ */
+export interface UserProfile {
+  id: number
+  username: string
+  name: string
+  email?: string | null
+  phone?: string | null
+  avatar?: string | null
+  status: number
+  buttons?: PermissionItem[] | null
+  permissions?: PermissionItem[] | null
+}
+export type UserProfileResponse = BaseResponse<UserProfile>
+
 /** 启用 / 禁用指定用户。status 只有 0（禁用）和 1（启用），后端是 Literal[0, 1] */
 export interface UpdateUserStatus {
   id: number

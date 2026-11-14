@@ -28,6 +28,8 @@ export interface MenuInfo {
 /** 菜单树节点：比平铺项多一层 children，叶子节点是空数组而不是 undefined */
 export interface MenuTreeNode extends MenuInfo {
   children: MenuTreeNode[]
+  /** 角色是否已拥有该权限（/role/getAllPermissions 才有意义；/menu/tree 恒为 0） */
+  check?: 0 | 1
 }
 
 /**

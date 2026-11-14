@@ -89,7 +89,8 @@
           <span v-else>—</span>
         </el-descriptions-item>
       </el-descriptions>
-      <template #footer>
+      <!-- 没有审批权限时整块 footer 都不渲染：批注输入框单独留着没有意义 -->
+      <template #footer v-if="hasPermission(PERM.labbookAccept)">
         <div class="flex justify-end gap-2">
           <el-input v-model="remark" placeholder="请输入批注" clearable></el-input>
           <el-button type="danger" plain @click="handleReview(2)">拒绝</el-button>
@@ -103,8 +104,11 @@
 <script lang="ts" setup>
 import { reqAcceptLabBook, reqGetLabBookWaitAcceptList } from '@/apis/lab_book/lab_book'
 import type { LabBookWaitAcceptInfo } from '@/apis/lab_book/type'
+import { PERM } from '@/constants/permissions'
+import useUserStore from '@/stores/modules/user'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, watch } from 'vue'
+const { hasPermission } = useUserStore()
 
 const formData = ref<LabBookWaitAcceptInfo[]>([])
 

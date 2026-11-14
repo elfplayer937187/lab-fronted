@@ -11,7 +11,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    DynamicForm: typeof import('../components/DynamicSearchForm.vue/index.js')['default']
     DynamicRouterMenu: typeof import('./../components/DynamicRouterMenu.vue')['default']
     DynamicSearchForm: typeof import('./../components/DynamicSearchForm.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
@@ -48,6 +47,7 @@ declare module 'vue' {
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElTag: typeof import('element-plus/es')['ElTag']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
+    ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

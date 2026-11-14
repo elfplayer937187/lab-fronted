@@ -30,6 +30,7 @@
     </el-card>
     <el-card>
       <el-button
+        v-permission="PERM.roleCreate"
         @click="openAddDialog"
         type="primary"
         icon="Plus"
@@ -54,13 +55,33 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" min-width="200px" fixed="right">
+        <!-- 按钮全无权限时整列不渲染，避免留一个空的操作列 -->
+        <el-table-column
+          v-if="
+            hasPermission([
+              PERM.roleUpdate,
+              PERM.roleStatus,
+              PERM.roleDelete,
+              PERM.roleAssignPermission,
+            ])
+          "
+          label="操作"
+          align="center"
+          min-width="320px"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button type="primary" plain size="small" @click="openEditDialog(row as RoleInfo)"
+            <el-button
+              v-permission="PERM.roleUpdate"
+              type="primary"
+              plain
+              size="small"
+              @click="openEditDialog(row as RoleInfo)"
               >编辑</el-button
             >
             <!-- el-table 的 row 只声明成 DefaultRow，两处都断言成实际类型 -->
             <el-button
+              v-permission="PERM.roleStatus"
               :type="row.status === 1 ? 'danger' : 'success'"
               :loading="statusLoadingId === row.id"
               :disabled="statusLoadingId !== null"
@@ -69,7 +90,20 @@
               @click="HandleUpdateStatus(row as RoleInfo)"
               >{{ row.status === 1 ? '禁用' : '启用' }}</el-button
             >
-            <el-button type="danger" plain size="small" @click="HandleDeleteRole(row as RoleInfo)"
+            <el-button
+              v-permission="PERM.roleAssignPermission"
+              type="warning"
+              plain
+              size="small"
+              @click="openPermissionDialog(row as RoleInfo)"
+              >分配权限</el-button
+            >
+            <el-button
+              v-permission="PERM.roleDelete"
+              type="danger"
+              plain
+              size="small"
+              @click="HandleDeleteRole(row as RoleInfo)"
               >删除</el-button
             >
           </template>
@@ -109,16 +143,47 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 分配权限：树是级联勾选，勾菜单会连带勾上所有子按钮 -->
+    <el-dialog v-model="permVisible" :title="`分配权限 - ${permRole?.name ?? ''}`" width="520px">
+      <el-tree
+        ref="permTreeRef"
+        :data="permTree"
+        :props="{ label: 'name', children: 'children' }"
+        show-checkbox
+        node-key="id"
+        default-expand-all
+        class="max-h-[60vh] overflow-y-auto"
+      />
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="permVisible = false">取消</el-button>
+          <el-button type="primary" :loading="permSubmitting" @click="confirmPermission">
+            确定
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { reqDeleteRole, reqGetRoleList, reqSaveRole } from '@/apis/role/role'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import {
+  reqAssignPermission,
+  reqDeleteRole,
+  reqGetRoleList,
+  reqGetRolePermissions,
+  reqSaveRole,
+} from '@/apis/role/role'
 import type { RoleInfo, SaveRole } from '@/apis/role/type'
-import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import type { MenuTreeNode } from '@/apis/menu/type'
+import { PERM } from '@/constants/permissions'
+import useUserStore from '@/stores/modules/user'
+import { ElMessageBox, type FormInstance, type FormRules, type TreeInstance } from 'element-plus'
 import 'element-plus/theme-chalk/el-message-box.css'
 
+const { hasPermission } = useUserStore()
 const tableData = ref<RoleInfo[]>([])
 
 const currentPage = ref(1)
@@ -244,6 +309,74 @@ const HandleDeleteRole = (row: RoleInfo) => {
       getRoleList(currentPage.value, limit.value, findName.value)
     })
   })
+}
+
+// ---- 分配权限 ----
+const permVisible = ref(false)
+const permSubmitting = ref(false)
+const permRole = ref<RoleInfo | null>(null)
+const permTree = ref<MenuTreeNode[]>([])
+const permTreeRef = ref<TreeInstance>()
+
+/**
+ * 只回填"叶子中 check=1"的节点。
+ * 级联模式下把父节点 id 塞进 setCheckedKeys 会把整棵子树勾满，
+ * 保存后等于凭空给角色加了一堆它本来没有的权限。
+ */
+const collectCheckedLeafIds = (nodes: MenuTreeNode[]): number[] =>
+  nodes.flatMap((node) =>
+    node.children?.length
+      ? collectCheckedLeafIds(node.children)
+      : node.check === 1
+        ? [node.id]
+        : [],
+  )
+
+const openPermissionDialog = async (row: RoleInfo) => {
+  permRole.value = row
+  permTree.value = []
+  permVisible.value = true
+  // 先清掉上一个角色留下的勾选，再等树渲染完
+  await nextTick()
+  permTreeRef.value?.setCheckedKeys([])
+
+  try {
+    const res = await reqGetRolePermissions(row.id)
+    if (res.code !== 200) return
+    permTree.value = res.data ?? []
+    await nextTick()
+    permTreeRef.value?.setCheckedKeys(collectCheckedLeafIds(permTree.value))
+  } catch {
+    // 角色可能刚被删掉（404），关掉弹窗并刷新列表
+    permVisible.value = false
+    getRoleList(currentPage.value, limit.value, findName.value)
+  }
+}
+
+const confirmPermission = async () => {
+  if (!permRole.value || !permTreeRef.value) return
+  // 半选父节点必须一起提交：只给按钮不给菜单 code，路由守卫会把用户挡在页面外
+  const ids = [
+    ...permTreeRef.value.getCheckedKeys(),
+    ...permTreeRef.value.getHalfCheckedKeys(),
+  ].map(Number)
+  if (!ids.length) {
+    ElMessage.warning('至少为角色保留一个权限')
+    return
+  }
+
+  permSubmitting.value = true
+  try {
+    const res = await reqAssignPermission(permRole.value.id, ids)
+    if (res.code === 200) {
+      ElMessage.success('分配成功')
+      permVisible.value = false
+    }
+  } catch {
+    // 失败提示已由 request 的响应拦截器弹出
+  } finally {
+    permSubmitting.value = false
+  }
 }
 </script>
 

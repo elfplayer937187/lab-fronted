@@ -5,7 +5,11 @@
       @submitForm="(v) => getLabList(v as LabSearchForm)"
     ></DynamicTable>
     <el-card class="mt-4">
-      <el-button type="primary" class="btn-green mb-4" @click="openCreateDialog"
+      <el-button
+        v-permission="PERM.labCreate"
+        type="primary"
+        class="btn-green mb-4"
+        @click="openCreateDialog"
         >新增实验室</el-button
       >
       <el-table :data="tableData" style="width: 100%" border>
@@ -21,9 +25,16 @@
         <el-table-column label="结束时间" min-width="160">
           <template #default="{ row }">{{ row.close_time }}</template>
         </el-table-column>
-        <el-table-column label="操作" align="center" min-width="270px" fixed="right">
+        <el-table-column
+          v-if="hasPermission([PERM.labDetail, PERM.labDelete, PERM.labUpdate, PERM.labImage])"
+          label="操作"
+          align="center"
+          min-width="270px"
+          fixed="right"
+        >
           <template #default="{ row }">
             <el-button
+              v-permission="PERM.labDetail"
               type="info"
               plain
               size="small"
@@ -31,6 +42,7 @@
               @click="openDetail(row as LabInfo)"
             ></el-button>
             <el-button
+              v-permission="PERM.labDelete"
               type="danger"
               plain
               size="small"
@@ -38,6 +50,7 @@
               @click="handleDelete(row as LabInfo)"
             ></el-button>
             <el-button
+              v-permission="PERM.labUpdate"
               type="warning"
               plain
               size="small"
@@ -45,6 +58,7 @@
               @click="openEditDialog(row as LabInfo)"
             ></el-button>
             <el-button
+              v-permission="PERM.labImage"
               type="success"
               size="small"
               icon="Picture"
@@ -184,7 +198,10 @@ import {
 } from '@/apis/Lab/lab'
 import type { LabInfo, LabStatus } from '@/apis/Lab/type'
 import DynamicTable from '@/components/DynamicSearchForm.vue'
+import { PERM } from '@/constants/permissions'
+import useUserStore from '@/stores/modules/user'
 import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+const { hasPermission } = useUserStore()
 import 'element-plus/theme-chalk/el-message-box.css'
 import { computed, onMounted, reactive, ref } from 'vue'
 

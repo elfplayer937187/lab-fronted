@@ -74,7 +74,7 @@ import useUserStore from '@/stores/modules/user.ts'
 import { storeToRefs } from 'pinia'
 import { setToken } from '@/utils/token'
 const userStore = useUserStore()
-const { userInfo, token } = storeToRefs(userStore)
+const { token } = storeToRefs(userStore)
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const form = reactive({
@@ -109,7 +109,7 @@ const HandleLogin = async () => {
     if (res.code === 200) {
       ElMessage.success('登录成功')
       token.value = res.data?.token || ''
-      userInfo.value = res.data
+      // 登录响应不含权限，用户信息统一由路由守卫调 /user/getInfo 拉取
       setToken(token.value || '')
 
       router.push('/')

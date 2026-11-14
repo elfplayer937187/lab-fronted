@@ -16,7 +16,7 @@
       :default-active="route.path"
       router
     >
-      <DynamicRouterMenu :menus="menus[0]?.children ?? []" parent-path="/dashboard" />
+      <DynamicRouterMenu :menus="menus" parent-path="/dashboard" />
     </el-menu>
   </div>
 </template>
@@ -24,16 +24,31 @@
 <script lang="ts" setup>
 import logoUrl from '@/assets/images/Login-Label.png'
 import useConfigStore from '@/stores/modules/config'
+import useUserStore from '@/stores/modules/user'
+import { dashboardRoutes } from '@/router'
 import { storeToRefs } from 'pinia'
-import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
+import type { RouteRecordRaw } from 'vue-router'
+import { useRoute } from 'vue-router'
 import DynamicRouterMenu from '@/components/DynamicRouterMenu.vue'
 // 折叠状态在 config store 里，Tabbar 的按钮和这里读的是同一份
 const route = useRoute()
-const router = useRouter()
-const menus = router.getRoutes().filter((route) => {
-  return route.path === '/dashboard'
-})
-console.log(menus)
+const { hasPermission } = useUserStore()
+
+/** 按权限过滤菜单；子项全被过滤掉的父节点也一并丢掉，避免留下空分组 */
+const filterMenuTree = (
+  routes: RouteRecordRaw[],
+  can: (code?: string | string[]) => boolean,
+): RouteRecordRaw[] =>
+  routes.flatMap((item) => {
+    if (item.meta?.permission && !can(item.meta.permission)) return []
+    if (!item.children?.length) return [item]
+    const children = filterMenuTree(item.children, can)
+    return children.length ? [{ ...item, children }] : []
+  })
+
+// hasPermission 内部读 permissions ref，computed 会跟着权限变化重新求值
+const menus = computed(() => filterMenuTree(dashboardRoutes, hasPermission))
 
 const { isFold } = storeToRefs(useConfigStore())
 </script>

@@ -74,3 +74,90 @@ export type LabDetailResponse = BaseResponse<LabInfo>
 export type LabSaveResponse = BaseResponse<null>
 export type DeleteLabResponse = BaseResponse<null>
 export type LabUserResponse = BaseResponse<{ id: number; username: string }[]>
+
+/**
+ * 设备类型，字段对着后端的 `GetDeviceTypeResponse`。
+ * 主键是 `type_id`，不是 id；type_name / type_code 都是唯一键。
+ */
+export interface DeviceTypeInfo {
+  type_id: number
+  /** 类型名称，后端列宽 String(30) */
+  type_name: string
+  type_desc?: string | null
+  /** 类型编号，后端列宽 String(30) */
+  type_code: string
+  status: LabStatus
+}
+
+/** `/lab_device_type/list` 的查询参数。`status` 不传才是不筛选，0 是合法值 */
+export interface DeviceTypeListQuery {
+  page: number
+  pageSize: number
+  keyword?: string
+  status?: LabStatus
+}
+
+/**
+ * 新增 / 编辑设备类型共用的请求体，带 type_id 走 PUT /update，不带走 POST /create。
+ *
+ * 注意 update 是**全量覆盖**（后端 `model_dump()` 不看字段是否传过），
+ * 编辑时所有字段都要原样带回去。
+ */
+export interface SaveDeviceType {
+  type_id?: number
+  type_name: string
+  type_code: string
+  type_desc?: string | null
+  status: LabStatus
+}
+
+export type DeviceTypeListResponse = BaseResponse<PageResult<DeviceTypeInfo>>
+export type DeviceTypeDetailResponse = BaseResponse<DeviceTypeInfo>
+
+/**
+ * 实验室设备资料，字段对着后端的 `GetLabDeviceResponse`。
+ * 主键是 `lab_device_id`，不是 id。
+ */
+export interface LabDeviceInfo {
+  lab_device_id: number
+  /** 设备名称，后端列宽 String(30) */
+  device_name: string
+  /** 设备编号，唯一键，后端列宽 String(30) */
+  device_code: string
+  /** 设备品牌，后端列宽 String(30) */
+  brand: string
+  type_id: number
+  description?: string | null
+  status: LabStatus
+  /**
+   * 实际可用：设备启用且所属类型启用才为 1。
+   * 后端根据 `status` 和类型状态算出来的只读字段，不能拿来提交。
+   */
+  effective_type: LabStatus
+}
+
+/** `/lab_device/list` 的查询参数。type_id / status 不传才是不筛选 */
+export interface LabDeviceListQuery {
+  page: number
+  pageSize: number
+  keyword?: string
+  type_id?: number
+  status?: LabStatus
+}
+
+/**
+ * 新增 / 编辑设备资料共用的请求体，带 lab_device_id 走 PUT /update，不带走 POST /create。
+ * 同样是全量覆盖：编辑时漏传 status 会被默认值 1 写回。
+ */
+export interface SaveLabDevice {
+  lab_device_id?: number
+  device_name: string
+  device_code: string
+  brand: string
+  type_id: number
+  description?: string | null
+  status: LabStatus
+}
+
+export type LabDeviceListResponse = BaseResponse<PageResult<LabDeviceInfo>>
+export type LabDeviceDetailResponse = BaseResponse<LabDeviceInfo>

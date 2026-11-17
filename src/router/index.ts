@@ -54,11 +54,19 @@ export const dashboardRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/Lab/LabLayout.vue'),
         meta: { title: '实验室管理', icon: 'Cpu', permission: PERM.labList },
       },
+      // 设备类型 / 设备资料拆成两个页面。权限表目前只有 labdevice:list，
+      // 两边先共用；以后拆权限在这里换成各自的 code
+      {
+        path: 'labdevicetype',
+        name: 'labdevicetype',
+        component: () => import('@/views/Lab/LabDeviceTypeLayout.vue'),
+        meta: { title: '设备类型管理', icon: 'Collection', permission: PERM.labdeviceList },
+      },
       {
         path: 'labdevice',
         name: 'labdevice',
-        component: () => import('@/views/PermissionLayout/PermissionLayout.vue'),
-        meta: { title: '设备管理', icon: 'Cpu', permission: PERM.labdeviceList },
+        component: () => import('@/views/Lab/LabDeviceLayout.vue'),
+        meta: { title: '设备资料管理', icon: 'Monitor', permission: PERM.labdeviceList },
       },
       // 实验室预约
       {

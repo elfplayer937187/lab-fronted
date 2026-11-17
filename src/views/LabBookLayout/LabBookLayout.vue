@@ -1,6 +1,6 @@
 <template>
-  <div class="flex justify-between gap-6 mr-6">
-    <el-card class="w-70 shrink-0 self-start left-card card-big">
+  <div class="flex h-full justify-between gap-6 mr-6">
+    <el-card class="w-70 shrink-0 left-card overflow-y-auto">
       <h3 class="text-base font-bold text-gray-800">预约概览</h3>
       <div class="mt-3 flex flex-col gap-1.5">
         <div class="flex items-center justify-between rounded-md bg-amber-50 px-3 py-2">
@@ -26,7 +26,7 @@
         </el-radio-group>
       </div>
     </el-card>
-    <div class="right-box flex-1" v-if="formData.length > 0">
+    <div class="right-box min-h-0 flex-1 overflow-y-auto px-10" v-if="formData.length > 0">
       <el-card class="card-big" v-for="book in formData" :key="book.id" @click="openDetail(book)">
         <img :src="book.image ?? ``" class="ml-3 h-30 w-30 rounded-lg" />
         <div class="">
@@ -65,7 +65,7 @@
       >
       </el-pagination>
     </div>
-    <el-card class="card-big flex-1" v-else>
+    <el-card class="flex-1" v-else>
       <div class="text-gray-500">暂无数据</div>
     </el-card>
     <!-- 详情弹窗。行数据来自 /lab_book/list/accept，字段够用，不再单独请求 -->
@@ -123,7 +123,7 @@ const detailRow = ref<LabBookWaitAcceptInfo | null>(null)
 const remark = ref<string>('')
 
 // 筛选状态
-const selectStatus = ref<'all' | 0 | 1>('all')
+const selectStatus = ref<'all' | 0 | 1>(0)
 watch(selectStatus, () => {
   getLabBookListAccept()
 })

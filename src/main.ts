@@ -6,6 +6,7 @@ import router from './router'
 // 路由守卫（登录态 + 页面权限校验）。必须在 router 之后引入，它会往 router 上注册 beforeEach
 import './router/permission'
 import { permission } from '@/directives/permission'
+import RobotIcon from '@/components/icons/RobotIcon.vue'
 
 // 全局样式入口：Tailwind v4（工具类，不含 preflight）
 import './styles/index.css'
@@ -21,6 +22,9 @@ const app = createApp(App)
 for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(name, component)
 }
+
+// Element Plus 没有机器人图标，AI 菜单的 meta.icon 用的是自定义的 RobotIcon
+app.component('RobotIcon', RobotIcon)
 
 // unplugin 只处理组件和 ElMessage 这类 API，指令不会被自动注册
 app.directive('permission', permission)

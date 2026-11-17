@@ -82,7 +82,7 @@ export const dashboardRoutes: RouteRecordRaw[] = [
     path: 'ai',
     name: 'ai',
     component: () => import('@/views/AI/AILayout.vue'),
-    meta: { title: 'ai小助手', icon: 'Robot', permission: PERM.aiChat },
+    meta: { title: 'AI 小助手', icon: 'RobotIcon', permission: PERM.aiChat },
   },
 ]
 

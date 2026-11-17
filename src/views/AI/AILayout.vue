@@ -2,20 +2,22 @@
   <div class="flex w-full h-full gap-10">
     <!-- 左侧历史记录 -->
     <div
-      class="flex flex-col left-history w-[20%] min-w-10 h-[95%] bg-gray-100 dark:bg-slate-900 rounded-2xl shadow-2xl ml-10 p-5"
+      class="flex border-gray-200 border flex-col left-history w-[20%] min-w-10 h-[95%] bg-gray-100 dark:bg-slate-900 rounded-2xl shadow-2xl ml-10 p-5"
     >
       <div class="history-title text-center text-xl text-gray-500 dark:text-gray-400 p-4">
         历史记录
       </div>
-      <div class="history-list flex-1 overflow-auto bg-white dark:bg-slate-800 px-2 rounded-2xl">
+      <div
+        class="border-gray-200 border history-list flex-1 overflow-auto bg-white dark:bg-slate-800 px-2 rounded-2xl"
+      >
         <ul class="flex flex-col gap-1 mt-3">
           <!-- 选中态用 bg-white，未选中留透明，hover 给一点反馈。
                别加 w-full：项目没有全局 border-box，w-full + px-4 会把右侧时间挤出去 -->
           <li
             v-for="item in HistoryList"
             :key="item.thread_id"
-            class="box-border px-4 py-2 mb-4 shadow-2xl rounded-xl cursor-pointer bg-white dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors hover:bg-gray-200"
-            :class="item.thread_id === nowChat?.thread_id ? 'bg-blue-100! dark:bg-blue-900!' : ''"
+            class="box-border border-gray-200 border px-4 py-2 mb-4 rounded-xl cursor-pointer bg-white dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors hover:bg-gray-100"
+            :class="item.thread_id === nowChat?.thread_id ? 'bg-gray-100! dark:bg-blue-900!' : ''"
             @click="() => ChangeChat(item)"
           >
             <div class="flex flex-col justify-between gap-2">
@@ -39,7 +41,7 @@
         </ul>
       </div>
       <div
-        class="your-role flex items-center mt-4 gap-3 px-2 py-2 shadow-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-all rounded-2xl"
+        class="your-role border-gray-200 border flex items-center mt-4 gap-3 px-2 py-2 shadow-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-all rounded-2xl"
       >
         <!-- fit=cover + rounded-full：头像裁成圆形，和顶栏默认图保持同一套回退 -->
         <el-image

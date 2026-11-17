@@ -30,5 +30,5 @@
   @apply bg-green-500! border-green-500! transition-all dark:bg-gray-500! dark:border-gray-500! hover:scale-110;
 }
 @utility card-big {
-  @apply hover:scale-106 transition-all duration-300 mt-4 cursor-pointer;
+  @apply hover:scale-103 transition-all duration-300 mt-4 cursor-pointer;
 }

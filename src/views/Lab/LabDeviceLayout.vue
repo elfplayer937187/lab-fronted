@@ -25,7 +25,9 @@
           <template #default="{ row }">{{ typeName(row.type_id) }}</template>
         </el-table-column>
         <el-table-column label="描述" min-width="180">
-          <template #default="{ row }">{{ row.description || '—' }}</template>
+          <template #default="{ row }">
+            <div class="desc-ellipsis">{{ row.description || '—' }}</div>
+          </template>
         </el-table-column>
         <!-- 只占一列，但要能区分「设备自己禁用」和「所属类型禁用」 -->
         <el-table-column label="状态" width="130" align="center">
@@ -414,4 +416,11 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="css"></style>
+<style scoped lang="css">
+/* 描述过长时单行省略；.el-table 的 .cell 默认是 white-space: normal，会换行 */
+.desc-ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+</style>
